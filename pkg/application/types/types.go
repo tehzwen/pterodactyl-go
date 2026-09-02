@@ -391,3 +391,31 @@ func (pt *PteroListRequest) BuildQueryParams(url *url.URL) url.Values {
 	}
 	return queryParams
 }
+
+type Database struct {
+	ID             int       `json:"id"`
+	Server         int       `json:"server"`
+	Host           int       `json:"host"`
+	Database       string    `json:"database"`
+	Username       string    `json:"username"`
+	Password       string    `json:"password"`
+	Remote         string    `json:"remote"`
+	MaxConnections int       `json:"max_connections"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+	Relationships  struct {
+		Host struct {
+			Object     string `json:"object"`
+			Attributes struct {
+				ID           int       `json:"id"`
+				Name         string    `json:"name"`
+				Host         string    `json:"host"`
+				Port         int       `json:"port"`
+				Username     string    `json:"username"`
+				MaxDatabases int       `json:"max_databases"`
+				CreatedAt    time.Time `json:"created_at"`
+				UpdatedAt    time.Time `json:"updated_at"`
+			} `json:"attributes"`
+		} `json:"host"`
+	} `json:"relationships"`
+}

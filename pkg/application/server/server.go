@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -29,78 +28,10 @@ func NewServerApi(baseUrl string, client *http.Client, authHeader http.Header) *
 	}
 }
 
-type APIErrorResponse struct {
-	Errors []struct {
-		Code   string `json:"code"`
-		Status string `json:"status"`
-		Detail string `json:"detail"`
-		Source struct {
-			Field string `json:"field"`
-		} `json:"source"`
-	} `json:"errors"`
-}
-
-type APIError struct {
-	StatusCode int
-	Message    string
-}
-
-func (e *APIError) Error() string {
-	return fmt.Sprintf("api error (status %d): %s", e.StatusCode, e.Message)
-}
-
-func CheckResponse(resp *http.Response) error {
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
-		return nil
-	}
-
-	body, _ := io.ReadAll(resp.Body)
-
-	var errResp APIErrorResponse
-	if err := json.Unmarshal(body, &errResp); err == nil && len(errResp.Errors) > 0 {
-		var msgs []string
-		for _, e := range errResp.Errors {
-			if e.Source.Field != "" {
-				msgs = append(msgs, fmt.Sprintf("%s (%s: %s)", e.Detail, e.Source.Field, e.Code))
-			} else {
-				msgs = append(msgs, fmt.Sprintf("%s (%s)", e.Detail, e.Code))
-			}
-		}
-		return &APIError{
-			StatusCode: resp.StatusCode,
-			Message:    strings.Join(msgs, "; "),
-		}
-	}
-
-	return &APIError{
-		StatusCode: resp.StatusCode,
-		Message:    fallbackStatusMessage(resp.StatusCode),
-	}
-}
-
-func fallbackStatusMessage(code int) string {
-	switch code {
-	case http.StatusBadRequest:
-		return "invalid input data"
-	case http.StatusUnauthorized:
-		return "invalid API key"
-	case http.StatusForbidden:
-		return "insufficient permissions"
-	case http.StatusNotFound:
-		return "server does not exist"
-	case http.StatusUnprocessableEntity:
-		return "invalid field values"
-	case http.StatusTooManyRequests:
-		return "rate limit exceeded"
-	default:
-		return http.StatusText(code)
-	}
-}
-
 // SERVERS
-func (ac *ServerApi) ListServers(ctx context.Context, request *types.PteroListRequest) ([]types.Server, error) {
-	headers := ac.authHeader
-	url, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, "/api/application/servers"))
+func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRequest) ([]types.Server, error) {
+	headers := sa.authHeader
+	url, err := url.Parse(sa.baseUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -117,12 +48,12 @@ func (ac *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 		}
 		req.WithContext(ctx)
 
-		resp, err := ac.client.Do(req)
+		resp, err := sa.client.Do(req)
 		if err != nil {
 			return nil, err
 		}
 
-		if err := CheckResponse(resp); err != nil {
+		if err := types.CheckResponse(resp); err != nil {
 			return nil, err
 		}
 
@@ -148,28 +79,12 @@ func (ac *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 	return servers, nil
 }
 
-type GetServerDetailsIncludeField string
-
-var (
-	ServerDetailsAllocations GetServerDetailsIncludeField = "allocations"
-	ServerDetailsUser        GetServerDetailsIncludeField = "user"
-	ServerDetailsSubUsers    GetServerDetailsIncludeField = "subusers"
-	ServerDetailsPack        GetServerDetailsIncludeField = "pack"
-	ServerDetailsNest        GetServerDetailsIncludeField = "nest"
-	ServerDetailsEgg         GetServerDetailsIncludeField = "egg"
-	ServerDetailsVariables   GetServerDetailsIncludeField = "variables"
-	ServerDetailsLocation    GetServerDetailsIncludeField = "location"
-	ServerDetailsNode        GetServerDetailsIncludeField = "node"
-	ServerDetailsDatabases   GetServerDetailsIncludeField = "databases"
-	ServerDetailsBackups     GetServerDetailsIncludeField = "backups"
-)
-
 // handles both internal server requests & get server by external ID requests
-func (ac *ServerApi) GetServerDetails(ctx context.Context, serverId int, include []GetServerDetailsIncludeField, external bool) (*types.Server, error) {
-	headers := ac.authHeader
-	baseUrl := fmt.Sprintf("%s/api/application/servers/%s", ac.baseUrl, strconv.Itoa(serverId))
+func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include []GetServerDetailsIncludeField, external bool) (*types.Server, error) {
+	headers := sa.authHeader
+	baseUrl := fmt.Sprintf("%s/%s", sa.baseUrl, strconv.Itoa(serverId))
 	if external {
-		baseUrl = fmt.Sprintf("%s/api/application/servers/external/%s", ac.baseUrl, strconv.Itoa(serverId))
+		baseUrl = fmt.Sprintf("%s/external/%s", sa.baseUrl, strconv.Itoa(serverId))
 	}
 
 	url, err := url.Parse(baseUrl)
@@ -194,12 +109,12 @@ func (ac *ServerApi) GetServerDetails(ctx context.Context, serverId int, include
 	}
 
 	req.WithContext(ctx)
-	resp, err := ac.client.Do(req)
+	resp, err := sa.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := CheckResponse(resp); err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -216,18 +131,18 @@ func (ac *ServerApi) GetServerDetails(ctx context.Context, serverId int, include
 	return nil, nil
 }
 
-func (ac *ServerApi) CreateServer(ctx context.Context, request CreateServerRequest) (*types.Server, error) {
+func (sa *ServerApi) CreateServer(ctx context.Context, request CreateServerRequest) (*types.Server, error) {
 	if err := request.Validate(); err != nil {
 		return nil, err
 	}
 
-	headers := ac.authHeader
+	headers := sa.authHeader
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/application/servers", ac.baseUrl), bytes.NewBuffer(requestBytes))
+	req, err := http.NewRequest("POST", sa.baseUrl, bytes.NewBuffer(requestBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -235,12 +150,12 @@ func (ac *ServerApi) CreateServer(ctx context.Context, request CreateServerReque
 	req.Header = headers
 	req.WithContext(ctx)
 
-	resp, err := ac.client.Do(req)
+	resp, err := sa.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := CheckResponse(resp); err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -258,16 +173,12 @@ func (ac *ServerApi) CreateServer(ctx context.Context, request CreateServerReque
 	return &server, nil
 }
 
-type UpdateServerRequest interface {
-	Validate() error
-}
-
-func (ac *ServerApi) updateServer(ctx context.Context, path string, request UpdateServerRequest) error {
+func (sa *ServerApi) updateServer(ctx context.Context, path string, request UpdateServerRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
 
-	headers := ac.authHeader
+	headers := sa.authHeader
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -281,106 +192,33 @@ func (ac *ServerApi) updateServer(ctx context.Context, path string, request Upda
 	req.Header = headers
 	req.WithContext(ctx)
 
-	resp, err := ac.client.Do(req)
+	resp, err := sa.client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	if err := CheckResponse(resp); err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-type UpdateServerDetailsRequest struct {
-	ServerId    int
-	Name        string `json:"name"`
-	UserId      int    `json:"user"`
-	ExternalId  string `json:"external_id"`
-	Description string `json:"description"`
+func (sa *ServerApi) UpdateServerDetails(ctx context.Context, request UpdateServerDetailsRequest) error {
+	return sa.updateServer(ctx, fmt.Sprintf("%s/%d/details", sa.baseUrl, request.ServerId), request)
 }
 
-func (usr UpdateServerDetailsRequest) Validate() error {
-	if usr.Name == "" {
-		return errors.New("name is required")
-	}
-	return nil
+func (sa *ServerApi) UpdateServerBuild(ctx context.Context, request UpdateServerBuildRequest) error {
+	return sa.updateServer(ctx, fmt.Sprintf("%s/%d/build", sa.baseUrl, request.ServerId), request)
 }
 
-func (ac *ServerApi) UpdateServerDetails(ctx context.Context, request UpdateServerDetailsRequest) error {
-	return ac.updateServer(ctx, fmt.Sprintf("%s/api/application/servers/%d/details", ac.baseUrl, request.ServerId), request)
-}
-
-type UpdateServerBuildRequest struct {
-	ServerId          int
-	Allocation        int                 `json:"allocation"`
-	Memory            int                 `json:"memory"`
-	Swap              int                 `json:"swap"`
-	Disk              int                 `json:"disk"`
-	IO                int                 `json:"io"`
-	CPU               int                 `json:"cpu"`
-	Threads           string              `json:"threads,omitempty"`
-	FeatureLimits     types.FeatureLimits `json:"feature_limits"`
-	AddAllocations    []int               `json:"add_allocations,omitempty"`
-	RemoveAllocations []int               `json:"remove_allocations,omitempty"`
-	OOMDisabled       bool                `json:"oom_disabled,omitempty"`
-}
-
-func (r UpdateServerBuildRequest) Validate() error {
-	if r.Allocation == 0 {
-		return errors.New("allocation is required")
-	}
-	if r.Memory == 0 {
-		return errors.New("memory is required")
-	}
-	if r.Disk < 0 {
-		return errors.New("disk is required")
-	}
-	if r.IO == 0 {
-		return errors.New("io is required")
-	}
-	if r.CPU < 0 {
-		return errors.New("cpu is required")
-	}
-
-	return nil
-}
-
-func (ac *ServerApi) UpdateServerBuild(ctx context.Context, request UpdateServerBuildRequest) error {
-	return ac.updateServer(ctx, fmt.Sprintf("%s/api/application/servers/%d/build", ac.baseUrl, request.ServerId), request)
-}
-
-type UpdateServerStartupRequest struct {
-	ServerId    int
-	Startup     string         `json:"startup"`
-	Environment map[string]any `json:"environment"`
-	Egg         int            `json:"egg"`
-	Image       string         `json:"image,omitempty"`
-	SkipScripts bool           `json:"skip_scripts"`
-}
-
-func (r UpdateServerStartupRequest) Validate() error {
-	if r.Startup == "" {
-		return errors.New("startup is required")
-	}
-	if r.Environment == nil {
-		return errors.New("environment is required")
-	}
-	if r.Egg == 0 {
-		return errors.New("egg is required")
-	}
-
-	return nil
-}
-
-func (ac *ServerApi) UpdateServerStartup(ctx context.Context, request UpdateServerStartupRequest) error {
-	return ac.updateServer(ctx, fmt.Sprintf("%s/api/application/servers/%d/startup", ac.baseUrl, request.ServerId), request)
+func (sa *ServerApi) UpdateServerStartup(ctx context.Context, request UpdateServerStartupRequest) error {
+	return sa.updateServer(ctx, fmt.Sprintf("%s/%d/startup", sa.baseUrl, request.ServerId), request)
 }
 
 // helper for all POST endpoints
-func (ac *ServerApi) postServer(ctx context.Context, path string) error {
-	headers := ac.authHeader
+func (sa *ServerApi) postServer(ctx context.Context, path string) error {
+	headers := sa.authHeader
 	req, err := http.NewRequest("POST", path, nil)
 	if err != nil {
 		return err
@@ -389,45 +227,45 @@ func (ac *ServerApi) postServer(ctx context.Context, path string) error {
 	req.Header = headers
 	req.WithContext(ctx)
 
-	resp, err := ac.client.Do(req)
+	resp, err := sa.client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	if err := CheckResponse(resp); err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (ac *ServerApi) SuspendServer(ctx context.Context, serverId int) error {
-	return ac.postServer(ctx, fmt.Sprintf("%s/api/application/servers/%d/suspend", ac.baseUrl, serverId))
+func (sa *ServerApi) SuspendServer(ctx context.Context, serverId int) error {
+	return sa.postServer(ctx, fmt.Sprintf("%s/%d/suspend", sa.baseUrl, serverId))
 }
 
-func (ac *ServerApi) UnsuspendServer(ctx context.Context, serverId int) error {
-	return ac.postServer(ctx, fmt.Sprintf("%s/api/application/servers/%d/unsuspend", ac.baseUrl, serverId))
+func (sa *ServerApi) UnsuspendServer(ctx context.Context, serverId int) error {
+	return sa.postServer(ctx, fmt.Sprintf("%s/%d/unsuspend", sa.baseUrl, serverId))
 }
 
-func (ac *ServerApi) ReinstallServer(ctx context.Context, serverId int) error {
-	return ac.postServer(ctx, fmt.Sprintf("%s/api/application/servers/%d/reinstall", ac.baseUrl, serverId))
+func (sa *ServerApi) ReinstallServer(ctx context.Context, serverId int) error {
+	return sa.postServer(ctx, fmt.Sprintf("%s/%d/reinstall", sa.baseUrl, serverId))
 }
 
-func (ac *ServerApi) DeleteServer(ctx context.Context, serverId int) error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/application/servers/%d", ac.baseUrl, serverId), nil)
+func (sa *ServerApi) DeleteServer(ctx context.Context, serverId int) error {
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%d", sa.baseUrl, serverId), nil)
 	if err != nil {
 		return err
 	}
 
-	req.Header = ac.authHeader
+	req.Header = sa.authHeader
 	req.WithContext(ctx)
 
-	resp, err := ac.client.Do(req)
+	resp, err := sa.client.Do(req)
 	if err != nil {
 		return err
 	}
 
-	if err := CheckResponse(resp); err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return err
 	}
 

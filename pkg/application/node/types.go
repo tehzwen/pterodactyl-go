@@ -134,3 +134,14 @@ func (car *CreateNodeAllocationRequest) Validate() error {
 
 	return nil
 }
+
+type ListNodeAllocationsRequest struct {
+	NodeId  int
+	Page    int
+	PerPage int
+}
+
+type ListNodeAllocationsResponse struct {
+	Allocations    []types.Allocation `json:"data"`
+	types.MetaData `json:"meta"`
+}

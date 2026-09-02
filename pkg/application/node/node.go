@@ -32,7 +32,7 @@ func NewNodeApi(baseUrl string, client *http.Client, authHeader http.Header) *No
 // NODES
 func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListRequest) ([]types.Node, error) {
 	headers := ac.authHeader
-	url, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, "/api/application/nodes"))
+	url, err := url.Parse(ac.baseUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -52,6 +52,10 @@ func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListReques
 
 		resp, err := ac.client.Do(req)
 		if err != nil {
+			return nil, err
+		}
+
+		if err := types.CheckResponse(resp); err != nil {
 			return nil, err
 		}
 
@@ -80,7 +84,7 @@ func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListReques
 
 func (ac *NodeApi) GetNode(ctx context.Context, request GetNodeRequest) (*types.Node, error) {
 	headers := ac.authHeader
-	url, err := url.Parse(fmt.Sprintf("%s%s%s", ac.baseUrl, "/api/application/nodes/", strconv.Itoa(request.NodeId)))
+	url, err := url.Parse(fmt.Sprintf("%s/%d", ac.baseUrl, request.NodeId))
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +107,10 @@ func (ac *NodeApi) GetNode(ctx context.Context, request GetNodeRequest) (*types.
 		return nil, err
 	}
 
+	if err := types.CheckResponse(resp); err != nil {
+		return nil, err
+	}
+
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -119,7 +127,7 @@ func (ac *NodeApi) GetNode(ctx context.Context, request GetNodeRequest) (*types.
 
 func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request GetDeployableNodesRequest) ([]types.Node, error) {
 	headers := ac.authHeader
-	url, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, "/api/application/nodes/deployable"))
+	url, err := url.Parse(fmt.Sprintf("%s/deployable", ac.baseUrl))
 	if err != nil {
 		return nil, err
 	}
@@ -151,6 +159,10 @@ func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request GetDeployable
 
 		resp, err := ac.client.Do(req)
 		if err != nil {
+			return nil, err
+		}
+
+		if err := types.CheckResponse(resp); err != nil {
 			return nil, err
 		}
 
@@ -188,7 +200,7 @@ func (ac *NodeApi) CreateNode(ctx context.Context, request CreateNodeRequest) (*
 		return nil, err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/application/nodes", ac.baseUrl), bytes.NewBuffer(requestBytes))
+	req, err := http.NewRequest("POST", ac.baseUrl, bytes.NewBuffer(requestBytes))
 	if err != nil {
 		return nil, err
 	}
@@ -197,6 +209,10 @@ func (ac *NodeApi) CreateNode(ctx context.Context, request CreateNodeRequest) (*
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := types.CheckResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -225,7 +241,7 @@ func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request UpdateNo
 		return err
 	}
 
-	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/api/application/nodes/%d", ac.baseUrl, request.NodeId), bytes.NewBuffer(requestBytes))
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/%d", ac.baseUrl, request.NodeId), bytes.NewBuffer(requestBytes))
 	if err != nil {
 		return err
 	}
@@ -237,27 +253,15 @@ func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request UpdateNo
 		return err
 	}
 
+	if err := types.CheckResponse(resp); err != nil {
+		return err
+	}
+
 	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		var apiErr types.PterodactylAPIError
-		if err := json.Unmarshal(b, &apiErr); err == nil {
-			// Inspect returned errors
-			for _, e := range apiErr.Errors {
-				// If Wings failed to sync the config file, ignore and treat as success
-				if e.Code == "ConfigurationNotPersistedException" {
-					fmt.Println("Warning: Node updated in database, but Wings daemon config file could not be updated automatically.")
-					return nil
-				}
-			}
-		}
-
-		return fmt.Errorf("error updating config - %s", string(b))
-	}
 
 	var node types.Node
 	if err := json.Unmarshal(b, &node); err != nil {
@@ -269,7 +273,7 @@ func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request UpdateNo
 
 func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types.NodeConfiguration, error) {
 	headers := ac.authHeader
-	url, err := url.Parse(fmt.Sprintf("%s/api/application/nodes/%s/configuration", ac.baseUrl, strconv.Itoa(nodeId)))
+	url, err := url.Parse(fmt.Sprintf("%s/%d/configuration", ac.baseUrl, nodeId))
 	if err != nil {
 		return nil, err
 	}
@@ -283,6 +287,10 @@ func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := types.CheckResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -300,20 +308,9 @@ func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types
 	return &response, nil
 }
 
-type ListNodeAllocationsRequest struct {
-	NodeId  int
-	Page    int
-	PerPage int
-}
-
-type ListNodeAllocationsResponse struct {
-	Allocations    []types.Allocation `json:"data"`
-	types.MetaData `json:"meta"`
-}
-
 func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request ListNodeAllocationsRequest) ([]types.Allocation, error) {
 	headers := ac.authHeader
-	url, err := url.Parse(fmt.Sprintf("%s/api/application/nodes/%d/allocations", ac.baseUrl, request.NodeId))
+	url, err := url.Parse(fmt.Sprintf("%s/%d/allocations", ac.baseUrl, request.NodeId))
 	if err != nil {
 		return nil, err
 	}
@@ -337,6 +334,10 @@ func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request ListNodeAllo
 
 		resp, err := ac.client.Do(req)
 		if err != nil {
+			return nil, err
+		}
+
+		if err := types.CheckResponse(resp); err != nil {
 			return nil, err
 		}
 
@@ -373,7 +374,7 @@ func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request CreateNodeA
 		return err
 	}
 
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/api/application/nodes/%d/allocations", ac.baseUrl, request.NodeId), bytes.NewBuffer(requestBytes))
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%d/allocations", ac.baseUrl, request.NodeId), bytes.NewBuffer(requestBytes))
 	if err != nil {
 		return err
 	}
@@ -385,14 +386,8 @@ func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request CreateNodeA
 		return err
 	}
 
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("error creating node allocation - %s", string(b))
 	}
 
 	return nil
@@ -404,7 +399,7 @@ func (ac *NodeApi) DeleteNodeAllocation(ctx context.Context, request DeleteNodeA
 	}
 
 	headers := ac.authHeader
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/application/nodes/%d/allocations/%d", ac.baseUrl, request.NodeId, request.AllocationId), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%d/allocations/%d", ac.baseUrl, request.NodeId, request.AllocationId), nil)
 	if err != nil {
 		return err
 	}
@@ -415,15 +410,8 @@ func (ac *NodeApi) DeleteNodeAllocation(ctx context.Context, request DeleteNodeA
 	if err != nil {
 		return err
 	}
-
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("error deleting node allocation - %s", string(b))
 	}
 
 	return nil
@@ -435,7 +423,7 @@ func (ac *NodeApi) DeleteNode(ctx context.Context, nodeId int) error {
 	}
 
 	headers := ac.authHeader
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/application/nodes/%d", ac.baseUrl, nodeId), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%d", ac.baseUrl, nodeId), nil)
 	if err != nil {
 		return err
 	}
@@ -447,14 +435,8 @@ func (ac *NodeApi) DeleteNode(ctx context.Context, nodeId int) error {
 		return err
 	}
 
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
+	if err := types.CheckResponse(resp); err != nil {
 		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Errorf("error deleting node - %s", string(b))
 	}
 
 	return nil

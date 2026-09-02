@@ -40,7 +40,7 @@ func NewClient(baseUrl string, opts ...func(a *Client)) (*Client, error) {
 		o(a)
 	}
 
-	a.Servers = server.NewServerApi(a.baseUrl, a.client, a.buildHeaders())
-	a.Nodes = node.NewNodeApi(a.baseUrl, a.client, a.buildHeaders())
+	a.Servers = server.NewServerApi(fmt.Sprintf("%s/api/application/servers", a.baseUrl), a.client, a.buildHeaders())
+	a.Nodes = node.NewNodeApi(fmt.Sprintf("%s/api/application/nodes", a.baseUrl), a.client, a.buildHeaders())
 	return a, nil
 }
