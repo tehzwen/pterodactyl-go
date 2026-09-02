@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/rs/zerolog/log"
-	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg"
+	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg/application"
+	pterodactyl_node "github.com/tehzwen/pterodactyl-go/pkg/application/node"
 )
 
 var (
@@ -16,12 +17,12 @@ var (
 
 func main() {
 	ctx := context.Background()
-	ptero, err := pterodactyl.NewApplicationClient(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
+	ptero, err := pterodactyl.NewClient(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
 	if err != nil {
 		log.Fatal().Err(err)
 	}
 
-	newNode, err := ptero.CreateNode(ctx, pterodactyl.CreateNodeRequest{
+	newNode, err := ptero.Nodes.CreateNode(ctx, pterodactyl_node.CreateNodeRequest{
 		Name:       "test-node",
 		LocationId: 1,
 		FQDN:       "test.localdomain",
@@ -34,7 +35,7 @@ func main() {
 	}
 	fmt.Println(newNode)
 
-	if err := ptero.CreateNodeAllocation(ctx, pterodactyl.CreateNodeAllocationRequest{
+	if err := ptero.Nodes.CreateNodeAllocation(ctx, pterodactyl_node.CreateNodeAllocationRequest{
 		NodeId: newNode.Attributes.ID,
 		Ip:     "192.168.0.170",
 		Ports:  []string{"20200"},
@@ -44,7 +45,7 @@ func main() {
 
 	// wait then delete the node
 	time.Sleep(time.Second * 10)
-	if err := ptero.DeleteNode(ctx, newNode.Attributes.ID); err != nil {
+	if err := ptero.Nodes.DeleteNode(ctx, newNode.Attributes.ID); err != nil {
 		log.Fatal().Err(err).Msg("failed to delete node")
 	}
 }

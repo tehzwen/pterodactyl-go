@@ -1,8 +1,11 @@
-package pkg
+package types
 
 import (
 	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -155,8 +158,11 @@ type CreateServerRequest struct {
 	Environment   map[string]string `json:"environment,omitempty"`
 	Limits        Limits            `json:"limits"`
 	FeatureLimits FeatureLimits     `json:"feature_limits"`
-	Allocation    Allocation        `json:"allocation"`
-	Deploy        map[string]string `json:"deploy,omitempty"`
+	Allocation    struct {
+		Default int `json:"default"`
+		Backups int `json:"backups"`
+	} `json:"allocation"`
+	Deploy map[string]string `json:"deploy,omitempty"`
 }
 
 func (r CreateServerRequest) Validate() error {
@@ -178,9 +184,6 @@ func (r CreateServerRequest) Validate() error {
 	}
 	if r.Limits.IO == 0 {
 		return errors.New("limits.io is required")
-	}
-	if r.Limits.CPU == 0 {
-		return errors.New("limits.cpu is required")
 	}
 
 	return nil
@@ -370,4 +373,21 @@ type FeatureLimits struct {
 	Databases   int `json:"databases"`
 	Allocations int `json:"allocations"`
 	Backups     int `json:"backups"`
+}
+
+func (pt *PteroListRequest) BuildQueryParams(url *url.URL) url.Values {
+	queryParams := url.Query()
+
+	if pt.Include != nil {
+		queryParams.Add("include", strings.Join(pt.Include, ","))
+	}
+
+	if pt.Page != 0 {
+		queryParams.Add("page", strconv.Itoa(pt.Page))
+	}
+
+	if pt.PerPage != 0 {
+		queryParams.Add("per_page", strconv.Itoa(pt.PerPage))
+	}
+	return queryParams
 }
