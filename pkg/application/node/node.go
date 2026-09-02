@@ -1,4 +1,4 @@
-package pkg
+package node
 
 import (
 	"bytes"
@@ -11,19 +11,35 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/tehzwen/pterodactyl-go/pkg/application/types"
 )
 
+type NodeApi struct {
+	baseUrl    string
+	client     *http.Client
+	authHeader http.Header
+}
+
+func NewNodeApi(baseUrl string, client *http.Client, authHeader http.Header) *NodeApi {
+	return &NodeApi{
+		baseUrl:    baseUrl,
+		client:     client,
+		authHeader: authHeader,
+	}
+}
+
 // NODES
-func (ac *ApplicationClient) ListNodes(ctx context.Context, request *PteroListRequest) ([]Node, error) {
-	headers := ac.buildHeaders()
+func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListRequest) ([]types.Node, error) {
+	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, "/api/application/nodes"))
 	if err != nil {
 		return nil, err
 	}
 
-	queryParams := request.buildQueryParams(url)
+	queryParams := request.BuildQueryParams(url)
 
-	var nodes []Node
+	var nodes []types.Node
 	for {
 		url.RawQuery = queryParams.Encode()
 
@@ -62,8 +78,8 @@ func (ac *ApplicationClient) ListNodes(ctx context.Context, request *PteroListRe
 	return nodes, nil
 }
 
-func (ac *ApplicationClient) GetNode(ctx context.Context, request GetNodeRequest) (*Node, error) {
-	headers := ac.buildHeaders()
+func (ac *NodeApi) GetNode(ctx context.Context, request GetNodeRequest) (*types.Node, error) {
+	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s%s%s", ac.baseUrl, "/api/application/nodes/", strconv.Itoa(request.NodeId)))
 	if err != nil {
 		return nil, err
@@ -93,7 +109,7 @@ func (ac *ApplicationClient) GetNode(ctx context.Context, request GetNodeRequest
 	}
 	defer resp.Body.Close()
 
-	var node Node
+	var node types.Node
 	if err := json.Unmarshal(b, &node); err != nil {
 		return nil, err
 	}
@@ -101,8 +117,8 @@ func (ac *ApplicationClient) GetNode(ctx context.Context, request GetNodeRequest
 	return &node, nil
 }
 
-func (ac *ApplicationClient) GetDeployableNodes(ctx context.Context, request GetDeployableNodesRequest) ([]Node, error) {
-	headers := ac.buildHeaders()
+func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request GetDeployableNodesRequest) ([]types.Node, error) {
+	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, "/api/application/nodes/deployable"))
 	if err != nil {
 		return nil, err
@@ -122,7 +138,7 @@ func (ac *ApplicationClient) GetDeployableNodes(ctx context.Context, request Get
 		queryParams.Add("memory", strconv.Itoa(request.Memory))
 	}
 
-	var nodes []Node
+	var nodes []types.Node
 	for {
 		url.RawQuery = queryParams.Encode()
 
@@ -161,12 +177,12 @@ func (ac *ApplicationClient) GetDeployableNodes(ctx context.Context, request Get
 	return nodes, nil
 }
 
-func (ac *ApplicationClient) CreateNode(ctx context.Context, request CreateNodeRequest) (*Node, error) {
+func (ac *NodeApi) CreateNode(ctx context.Context, request CreateNodeRequest) (*types.Node, error) {
 	if err := request.Validate(); err != nil {
 		return nil, err
 	}
 
-	headers := ac.buildHeaders()
+	headers := ac.authHeader
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -190,7 +206,7 @@ func (ac *ApplicationClient) CreateNode(ctx context.Context, request CreateNodeR
 	}
 	defer resp.Body.Close()
 
-	var node Node
+	var node types.Node
 	if err := json.Unmarshal(b, &node); err != nil {
 		return nil, err
 	}
@@ -198,12 +214,12 @@ func (ac *ApplicationClient) CreateNode(ctx context.Context, request CreateNodeR
 	return &node, nil
 }
 
-func (ac *ApplicationClient) UpdateNodeConfiguration(ctx context.Context, request UpdateNodeConfigurationRequest) error {
+func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request UpdateNodeConfigurationRequest) error {
 	if request.NodeId == 0 {
 		return errors.New("missing required field 'NodeId'")
 	}
 
-	headers := ac.buildHeaders()
+	headers := ac.authHeader
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -228,7 +244,7 @@ func (ac *ApplicationClient) UpdateNodeConfiguration(ctx context.Context, reques
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		var apiErr PterodactylAPIError
+		var apiErr types.PterodactylAPIError
 		if err := json.Unmarshal(b, &apiErr); err == nil {
 			// Inspect returned errors
 			for _, e := range apiErr.Errors {
@@ -243,7 +259,7 @@ func (ac *ApplicationClient) UpdateNodeConfiguration(ctx context.Context, reques
 		return fmt.Errorf("error updating config - %s", string(b))
 	}
 
-	var node Node
+	var node types.Node
 	if err := json.Unmarshal(b, &node); err != nil {
 		return err
 	}
@@ -251,8 +267,8 @@ func (ac *ApplicationClient) UpdateNodeConfiguration(ctx context.Context, reques
 	return nil
 }
 
-func (ac *ApplicationClient) GetNodeConfiguration(ctx context.Context, nodeId int) (*NodeConfiguration, error) {
-	headers := ac.buildHeaders()
+func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types.NodeConfiguration, error) {
+	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s/api/application/nodes/%s/configuration", ac.baseUrl, strconv.Itoa(nodeId)))
 	if err != nil {
 		return nil, err
@@ -276,7 +292,7 @@ func (ac *ApplicationClient) GetNodeConfiguration(ctx context.Context, nodeId in
 	}
 	defer resp.Body.Close()
 
-	var response NodeConfiguration
+	var response types.NodeConfiguration
 	if err := json.Unmarshal(b, &response); err != nil {
 		return nil, err
 	}
@@ -291,12 +307,12 @@ type ListNodeAllocationsRequest struct {
 }
 
 type ListNodeAllocationsResponse struct {
-	Allocations []Allocation `json:"data"`
-	MetaData    `json:"meta"`
+	Allocations    []types.Allocation `json:"data"`
+	types.MetaData `json:"meta"`
 }
 
-func (ac *ApplicationClient) ListNodeAllocations(ctx context.Context, request ListNodeAllocationsRequest) ([]Allocation, error) {
-	headers := ac.buildHeaders()
+func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request ListNodeAllocationsRequest) ([]types.Allocation, error) {
+	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s/api/application/nodes/%d/allocations", ac.baseUrl, request.NodeId))
 	if err != nil {
 		return nil, err
@@ -309,7 +325,7 @@ func (ac *ApplicationClient) ListNodeAllocations(ctx context.Context, request Li
 		queryParams.Add("per_page", strconv.Itoa(request.PerPage))
 	}
 
-	var allocations []Allocation = make([]Allocation, 0)
+	var allocations []types.Allocation = make([]types.Allocation, 0)
 	for {
 		url.RawQuery = queryParams.Encode()
 		req := &http.Request{
@@ -346,12 +362,12 @@ func (ac *ApplicationClient) ListNodeAllocations(ctx context.Context, request Li
 	return allocations, nil
 }
 
-func (ac *ApplicationClient) CreateNodeAllocation(ctx context.Context, request CreateNodeAllocationRequest) error {
+func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request CreateNodeAllocationRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
 
-	headers := ac.buildHeaders()
+	headers := ac.authHeader
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -382,12 +398,12 @@ func (ac *ApplicationClient) CreateNodeAllocation(ctx context.Context, request C
 	return nil
 }
 
-func (ac *ApplicationClient) DeleteNodeAllocation(ctx context.Context, request DeleteNodeAllocationRequest) error {
+func (ac *NodeApi) DeleteNodeAllocation(ctx context.Context, request DeleteNodeAllocationRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
 
-	headers := ac.buildHeaders()
+	headers := ac.authHeader
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/application/nodes/%d/allocations/%d", ac.baseUrl, request.NodeId, request.AllocationId), nil)
 	if err != nil {
 		return err
@@ -413,12 +429,12 @@ func (ac *ApplicationClient) DeleteNodeAllocation(ctx context.Context, request D
 	return nil
 }
 
-func (ac *ApplicationClient) DeleteNode(ctx context.Context, nodeId int) error {
+func (ac *NodeApi) DeleteNode(ctx context.Context, nodeId int) error {
 	if nodeId <= 0 {
 		return fmt.Errorf("missing required field '%s'", "NodeId")
 	}
 
-	headers := ac.buildHeaders()
+	headers := ac.authHeader
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/api/application/nodes/%d", ac.baseUrl, nodeId), nil)
 	if err != nil {
 		return err

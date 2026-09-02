@@ -1,7 +1,11 @@
-package pkg
+package types
 
 import (
+	"errors"
 	"fmt"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -140,6 +144,46 @@ func (car *CreateNodeAllocationRequest) Validate() error {
 	}
 	if car.NodeId == 0 {
 		return fmt.Errorf("missing required field '%s'", "NodeId")
+	}
+
+	return nil
+}
+
+type CreateServerRequest struct {
+	Name          string            `json:"name"`
+	User          int               `json:"user"`
+	Egg           int               `json:"egg"`
+	DockerImage   string            `json:"docker_image,omitempty"`
+	Startup       string            `json:"startup,omitempty"`
+	Environment   map[string]string `json:"environment,omitempty"`
+	Limits        Limits            `json:"limits"`
+	FeatureLimits FeatureLimits     `json:"feature_limits"`
+	Allocation    struct {
+		Default int `json:"default"`
+		Backups int `json:"backups"`
+	} `json:"allocation"`
+	Deploy map[string]string `json:"deploy,omitempty"`
+}
+
+func (r CreateServerRequest) Validate() error {
+	if r.Name == "" {
+		return errors.New("name is required")
+	}
+	if r.User == 0 {
+		return errors.New("user is required")
+	}
+	if r.Egg == 0 {
+		return errors.New("egg is required")
+	}
+
+	if r.Limits.Memory == 0 {
+		return errors.New("limits.memory is required")
+	}
+	if r.Limits.Disk == 0 {
+		return errors.New("limits.disk is required")
+	}
+	if r.Limits.IO == 0 {
+		return errors.New("limits.io is required")
 	}
 
 	return nil
@@ -313,4 +357,37 @@ type Allocation struct {
 		Notes    *string `json:"notes"`
 		Assigned bool    `json:"assigned"`
 	} `json:"attributes"`
+}
+
+type Limits struct {
+	Memory      int    `json:"memory"`
+	Swap        int    `json:"swap"`
+	Disk        int    `json:"disk"`
+	IO          int    `json:"io"`
+	CPU         int    `json:"cpu"`
+	Threads     string `json:"threads,omitempty"`
+	OOMDisabled bool   `json:"oom_disabled,omitempty"`
+}
+
+type FeatureLimits struct {
+	Databases   int `json:"databases"`
+	Allocations int `json:"allocations"`
+	Backups     int `json:"backups"`
+}
+
+func (pt *PteroListRequest) BuildQueryParams(url *url.URL) url.Values {
+	queryParams := url.Query()
+
+	if pt.Include != nil {
+		queryParams.Add("include", strings.Join(pt.Include, ","))
+	}
+
+	if pt.Page != 0 {
+		queryParams.Add("page", strconv.Itoa(pt.Page))
+	}
+
+	if pt.PerPage != 0 {
+		queryParams.Add("per_page", strconv.Itoa(pt.PerPage))
+	}
+	return queryParams
 }

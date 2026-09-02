@@ -10,7 +10,7 @@ Follow the instructions found at https://pterodactyl.io/panel/1.0/getting_starte
 package main
 
 import (
-	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg"
+	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg/application"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 )
 
 func main() {
-    ptero, err := pterodactyl.NewApplicationClient(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
+    ptero, err := pterodactyl.NewClient(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
     if err != nil {
         fatal(err)
     }
