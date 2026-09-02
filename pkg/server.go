@@ -159,19 +159,11 @@ func (ac *ApplicationClient) CreateServer(ctx context.Context, request CreateSer
 	return nil
 }
 
-type UpdateServerDetailsRequest struct {
-	ServerId    string
-	Name        string `json:"name"`
-	UserId      int    `json:"user"`
-	ExternalId  string `json:"external_id"`
-	Description string `json:"description"`
+type UpdateServerRequest interface {
+	Validate() error
 }
 
-func (usr *UpdateServerDetailsRequest) Validate() error {
-	return nil
-}
-
-func (ac *ApplicationClient) UpdateServerDetails(ctx context.Context, request UpdateServerDetailsRequest) error {
+func (ac *ApplicationClient) updateServer(ctx context.Context, path string, request UpdateServerRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
@@ -182,7 +174,7 @@ func (ac *ApplicationClient) UpdateServerDetails(ctx context.Context, request Up
 		return err
 	}
 
-	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/api/application/servers/%s/details", ac.baseUrl, request.ServerId), bytes.NewBuffer(requestBytes))
+	req, err := http.NewRequest("PATCH", path, bytes.NewBuffer(requestBytes))
 	if err != nil {
 		return err
 	}
@@ -204,6 +196,22 @@ func (ac *ApplicationClient) UpdateServerDetails(ctx context.Context, request Up
 	fmt.Printf("bytes - %s\n", string(b))
 
 	return nil
+}
+
+type UpdateServerDetailsRequest struct {
+	ServerId    string
+	Name        string `json:"name"`
+	UserId      int    `json:"user"`
+	ExternalId  string `json:"external_id"`
+	Description string `json:"description"`
+}
+
+func (usr UpdateServerDetailsRequest) Validate() error {
+	return nil
+}
+
+func (ac *ApplicationClient) UpdateServerDetails(ctx context.Context, request UpdateServerDetailsRequest) error {
+	return ac.updateServer(ctx, fmt.Sprintf("%s/api/application/servers/%s/details", ac.baseUrl, request.ServerId), request)
 }
 
 type UpdateServerBuildRequest struct {
@@ -242,36 +250,32 @@ func (r UpdateServerBuildRequest) Validate() error {
 }
 
 func (ac *ApplicationClient) UpdateServerBuild(ctx context.Context, request UpdateServerBuildRequest) error {
-	if err := request.Validate(); err != nil {
-		return err
+	return ac.updateServer(ctx, fmt.Sprintf("%s/api/application/servers/%s/build", ac.baseUrl, request.ServerId), request)
+}
+
+type UpdateServerStartupRequest struct {
+	ServerId    string
+	Startup     string            `json:"startup"`
+	Environment map[string]string `json:"environment"`
+	Egg         int               `json:"egg"`
+	Image       string            `json:"image,omitempty"`
+	SkipScripts bool              `json:"skip_scripts,omitempty"`
+}
+
+func (r UpdateServerStartupRequest) Validate() error {
+	if r.Startup == "" {
+		return errors.New("startup is required")
 	}
-
-	headers := ac.buildHeaders()
-	requestBytes, err := json.Marshal(request)
-	if err != nil {
-		return err
+	if r.Environment == nil {
+		return errors.New("environment is required")
 	}
-
-	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/api/application/servers/%s/build", ac.baseUrl, request.ServerId), bytes.NewBuffer(requestBytes))
-	if err != nil {
-		return err
+	if r.Egg == 0 {
+		return errors.New("egg is required")
 	}
-
-	req.Header = headers
-	req.WithContext(ctx)
-
-	resp, err := ac.client.Do(req)
-	if err != nil {
-		return err
-	}
-
-	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	fmt.Printf("bytes - %s\n", string(b))
 
 	return nil
+}
+
+func (ac *ApplicationClient) UpdateServerStartup(ctx context.Context, request UpdateServerStartupRequest) error {
+	return ac.updateServer(ctx, fmt.Sprintf("%s/api/application/servers/%s/build", ac.baseUrl, request.ServerId), request)
 }
