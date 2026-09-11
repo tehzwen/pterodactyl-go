@@ -125,6 +125,11 @@ type CreateNodeAllocationRequest struct {
 	Ports   []string `json:"ports"`
 }
 
+type ListUsersResponse struct {
+	Users    []User `json:"data"`
+	MetaData `json:"meta"`
+}
+
 type ListServersResponse struct {
 	Servers  []Server `json:"data"`
 	MetaData `json:"meta"`
@@ -184,6 +189,87 @@ func (r CreateServerRequest) Validate() error {
 	}
 	if r.Limits.IO == 0 {
 		return errors.New("limits.io is required")
+	}
+
+	return nil
+}
+
+type ListUsersFilters struct {
+	Page       int    `json:"page"`
+	PerPage    int    `json:"per_page"`
+	Email      string `json:"filter[email]"`
+	UUID       string `json:"filter[uuid]"`
+	Username   string `json:"filter[username]"`
+	ExternalID string `json:"filter[external_id]"`
+	Sort       string `json:"sort"`    // id, uuid, username, email, created_at, updated_at
+	Include    string `json:"include"` // servers
+}
+
+type CreateUserRequest struct {
+	Email      string `json:"email"`
+	Username   string `json:"username"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Password   string `json:"password"`
+	Language   string `json:"language"`
+	RootAdmin  bool   `json:"root_admin"`
+	ExternalID string `json:"external_id"`
+}
+
+func (r *CreateUserRequest) Validate() error {
+	// set defaults
+	if r.Language == "" {
+		r.Language = "en"
+	}
+
+	if r.Email == "" {
+		return errors.New("email is required")
+	}
+	if r.Username == "" {
+		return errors.New("username is required")
+	}
+	if r.FirstName == "" {
+		return errors.New("first_name is required")
+	}
+	if r.LastName == "" {
+		return errors.New("last_name is required")
+	}
+
+	return nil
+}
+
+type UpdateUserRequest struct {
+	UserId     int
+	Email      string `json:"email"`
+	Username   string `json:"username"`
+	FirstName  string `json:"first_name"`
+	LastName   string `json:"last_name"`
+	Password   string `json:"password"`
+	Language   string `json:"language"`
+	RootAdmin  bool   `json:"root_admin"`
+	ExternalID string `json:"external_id"`
+}
+
+func (r *UpdateUserRequest) Validate() error {
+	// set defaults
+	if r.Language == "" {
+		r.Language = "en"
+	}
+
+	if r.UserId <= 0 {
+		return errors.New("UserId is required")
+	}
+	if r.Email == "" {
+		return errors.New("email is required")
+	}
+	if r.Username == "" {
+		return errors.New("username is required")
+	}
+	if r.FirstName == "" {
+		return errors.New("first_name is required")
+	}
+	if r.LastName == "" {
+		return errors.New("last_name is required")
 	}
 
 	return nil

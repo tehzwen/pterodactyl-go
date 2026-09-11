@@ -7,6 +7,7 @@ import (
 
 	"github.com/tehzwen/pterodactyl-go/pkg/application/node"
 	"github.com/tehzwen/pterodactyl-go/pkg/application/server"
+	"github.com/tehzwen/pterodactyl-go/pkg/application/user"
 )
 
 type Client struct {
@@ -15,6 +16,7 @@ type Client struct {
 	apiKey  string
 	Servers *server.ServerApi
 	Nodes   *node.NodeApi
+	Users   *user.UserApi
 }
 
 func (ac *Client) buildHeaders() http.Header {
@@ -42,5 +44,6 @@ func NewClient(baseUrl string, opts ...func(a *Client)) (*Client, error) {
 
 	a.Servers = server.NewServerApi(fmt.Sprintf("%s/api/application/servers", a.baseUrl), a.client, a.buildHeaders())
 	a.Nodes = node.NewNodeApi(fmt.Sprintf("%s/api/application/nodes", a.baseUrl), a.client, a.buildHeaders())
+	a.Users = user.NewUserApi(fmt.Sprintf("%s/api/application/users", a.baseUrl), a.client, a.buildHeaders())
 	return a, nil
 }
