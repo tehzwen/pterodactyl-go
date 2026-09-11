@@ -15,6 +15,32 @@ type PteroListRequest struct {
 	PerPage int
 }
 
+type ListUsersResponse struct {
+	Users    []User `json:"data"`
+	MetaData `json:"meta"`
+}
+
+type CreateNodeAllocationRequest struct {
+	NodeId  int
+	Ip      string   `json:"ip"`
+	IpAlias string   `json:"ip_alias"`
+	Ports   []string `json:"ports"`
+}
+
+func (car *CreateNodeAllocationRequest) Validate() error {
+	if car.Ip == "" {
+		return fmt.Errorf("missing required field '%s'", "ip")
+	}
+	if len(car.Ports) == 0 {
+		return fmt.Errorf("missing required field '%s'", "ports")
+	}
+	if car.NodeId == 0 {
+		return fmt.Errorf("missing required field '%s'", "NodeId")
+	}
+
+	return nil
+}
+
 type GetNodeRequest struct {
 	NodeId  int
 	Include []string
@@ -118,17 +144,32 @@ func (dar *DeleteNodeAllocationRequest) Validate() error {
 	return nil
 }
 
-type CreateNodeAllocationRequest struct {
+type ListNodeAllocationsRequest struct {
 	NodeId  int
-	Ip      string   `json:"ip"`
-	IpAlias string   `json:"ip_alias"`
-	Ports   []string `json:"ports"`
+	Page    int
+	PerPage int
 }
 
-type ListUsersResponse struct {
-	Users    []User `json:"data"`
-	MetaData `json:"meta"`
+type ListNodeAllocationsResponse struct {
+	Allocations []Allocation `json:"data"`
+	MetaData    `json:"meta"`
 }
+
+type GetServerDetailsIncludeField string
+
+var (
+	ServerDetailsAllocations GetServerDetailsIncludeField = "allocations"
+	ServerDetailsUser        GetServerDetailsIncludeField = "user"
+	ServerDetailsSubUsers    GetServerDetailsIncludeField = "subusers"
+	ServerDetailsPack        GetServerDetailsIncludeField = "pack"
+	ServerDetailsNest        GetServerDetailsIncludeField = "nest"
+	ServerDetailsEgg         GetServerDetailsIncludeField = "egg"
+	ServerDetailsVariables   GetServerDetailsIncludeField = "variables"
+	ServerDetailsLocation    GetServerDetailsIncludeField = "location"
+	ServerDetailsNode        GetServerDetailsIncludeField = "node"
+	ServerDetailsDatabases   GetServerDetailsIncludeField = "databases"
+	ServerDetailsBackups     GetServerDetailsIncludeField = "backups"
+)
 
 type ListServersResponse struct {
 	Servers  []Server `json:"data"`
@@ -138,20 +179,6 @@ type ListServersResponse struct {
 type ListNodesResponse struct {
 	Nodes    []Node `json:"data"`
 	MetaData `json:"meta"`
-}
-
-func (car *CreateNodeAllocationRequest) Validate() error {
-	if car.Ip == "" {
-		return fmt.Errorf("missing required field '%s'", "ip")
-	}
-	if len(car.Ports) == 0 {
-		return fmt.Errorf("missing required field '%s'", "ports")
-	}
-	if car.NodeId == 0 {
-		return fmt.Errorf("missing required field '%s'", "NodeId")
-	}
-
-	return nil
 }
 
 type CreateServerRequest struct {
@@ -189,6 +216,124 @@ func (r CreateServerRequest) Validate() error {
 	}
 	if r.Limits.IO == 0 {
 		return errors.New("limits.io is required")
+	}
+
+	return nil
+}
+
+type UpdateServerRequest interface {
+	Validate() error
+}
+
+type UpdateServerDetailsRequest struct {
+	ServerId    int
+	Name        string `json:"name"`
+	UserId      int    `json:"user"`
+	ExternalId  string `json:"external_id"`
+	Description string `json:"description"`
+}
+
+func (usr UpdateServerDetailsRequest) Validate() error {
+	if usr.Name == "" {
+		return errors.New("name is required")
+	}
+	return nil
+}
+
+type UpdateServerBuildRequest struct {
+	ServerId          int
+	Allocation        int           `json:"allocation"`
+	Memory            int           `json:"memory"`
+	Swap              int           `json:"swap"`
+	Disk              int           `json:"disk"`
+	IO                int           `json:"io"`
+	CPU               int           `json:"cpu"`
+	Threads           string        `json:"threads,omitempty"`
+	FeatureLimits     FeatureLimits `json:"feature_limits"`
+	AddAllocations    []int         `json:"add_allocations,omitempty"`
+	RemoveAllocations []int         `json:"remove_allocations,omitempty"`
+	OOMDisabled       bool          `json:"oom_disabled,omitempty"`
+}
+
+func (r UpdateServerBuildRequest) Validate() error {
+	if r.Allocation == 0 {
+		return errors.New("allocation is required")
+	}
+	if r.Memory == 0 {
+		return errors.New("memory is required")
+	}
+	if r.Disk < 0 {
+		return errors.New("disk is required")
+	}
+	if r.IO == 0 {
+		return errors.New("io is required")
+	}
+	if r.CPU < 0 {
+		return errors.New("cpu is required")
+	}
+
+	return nil
+}
+
+type UpdateServerStartupRequest struct {
+	ServerId    int
+	Startup     string         `json:"startup"`
+	Environment map[string]any `json:"environment"`
+	Egg         int            `json:"egg"`
+	Image       string         `json:"image,omitempty"`
+	SkipScripts bool           `json:"skip_scripts"`
+}
+
+func (r UpdateServerStartupRequest) Validate() error {
+	if r.Startup == "" {
+		return errors.New("startup is required")
+	}
+	if r.Environment == nil {
+		return errors.New("environment is required")
+	}
+	if r.Egg == 0 {
+		return errors.New("egg is required")
+	}
+
+	return nil
+}
+
+type CreateServerDatabaseRequest struct {
+	ServerId               int
+	Database               string `json:"database"`
+	RemoteConnectionString string `json:"remote"` // can use % for all
+	Host                   int    `json:"host"`
+}
+
+func (csdr CreateServerDatabaseRequest) Validate() error {
+	if csdr.ServerId <= 0 {
+		return errors.New("ServerId is required")
+	}
+	if csdr.Database == "" {
+		return errors.New("database is required")
+	}
+	if csdr.RemoteConnectionString == "" {
+		return errors.New("remote is required")
+	}
+	if csdr.Host <= 0 {
+		return errors.New("host is required")
+	}
+
+	return nil
+}
+
+type UpdateServerDatabaseRequest struct {
+	ServerId               int
+	DatabaseId             int
+	RemoteConnectionString string `json:"remote"` // can use % for all
+}
+
+func (usdr UpdateServerDatabaseRequest) Validate() error {
+	if usdr.ServerId <= 0 {
+		return errors.New("ServerId is required")
+	}
+	if usdr.DatabaseId <= 0 {
+		return errors.New("DatabaseId is required")
 	}
 
 	return nil

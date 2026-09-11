@@ -7,8 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg/application"
-	pterodactyl_server "github.com/tehzwen/pterodactyl-go/pkg/application/server"
-	pterodactyl_application_types "github.com/tehzwen/pterodactyl-go/pkg/application/types"
+	"github.com/tehzwen/pterodactyl-go/pkg/application/types"
 )
 
 func main() {
@@ -21,11 +20,11 @@ func main() {
 		log.Fatal().Err(err).Msg("could not create new application client")
 	}
 
-	testServer, err := ptero.Servers.CreateServer(ctx, pterodactyl_server.CreateServerRequest{
+	testServer, err := ptero.Servers.CreateServer(ctx, types.CreateServerRequest{
 		Name: "zach test server",
 		User: 1,
 		Egg:  1,
-		Limits: pterodactyl_application_types.Limits{
+		Limits: types.Limits{
 			Memory: 100,
 			Disk:   100,
 			IO:     10,
@@ -47,7 +46,7 @@ func main() {
 		log.Fatal().Err(err).Msg("could not create server")
 	}
 
-	servers, err := ptero.Servers.ListServers(ctx, &pterodactyl_application_types.PteroListRequest{})
+	servers, err := ptero.Servers.ListServers(ctx, &types.PteroListRequest{})
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not list servers")
 	}
@@ -55,7 +54,7 @@ func main() {
 	fmt.Printf("%+v\n", servers[1])
 
 	// update this server as a test
-	if err := ptero.Servers.UpdateServerBuild(ctx, pterodactyl_server.UpdateServerBuildRequest{
+	if err := ptero.Servers.UpdateServerBuild(ctx, types.UpdateServerBuildRequest{
 		ServerId:      testServer.Attributes.Id,
 		Allocation:    testServer.Attributes.Allocation,
 		Memory:        100,
@@ -67,7 +66,7 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to update server")
 	}
 
-	if err := ptero.Servers.UpdateServerDetails(ctx, pterodactyl_server.UpdateServerDetailsRequest{
+	if err := ptero.Servers.UpdateServerDetails(ctx, types.UpdateServerDetailsRequest{
 		ServerId: testServer.Attributes.Id,
 		UserId:   testServer.Attributes.User,
 		Name:     "my minecraft test - updated",
@@ -75,7 +74,7 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to update server details")
 	}
 
-	if err := ptero.Servers.UpdateServerStartup(ctx, pterodactyl_server.UpdateServerStartupRequest{
+	if err := ptero.Servers.UpdateServerStartup(ctx, types.UpdateServerStartupRequest{
 		ServerId:    testServer.Attributes.Id,
 		Startup:     testServer.Attributes.Container.StartupCommand,
 		Environment: testServer.Attributes.Container.Environment,
