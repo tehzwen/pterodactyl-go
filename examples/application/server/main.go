@@ -15,7 +15,7 @@ func main() {
 	API_KEY := os.Getenv("PTERO_API_KEY")
 
 	ctx := context.Background()
-	ptero, err := pterodactyl.NewClient(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
+	ptero, err := pterodactyl.NewApplicationApi(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not create new application client")
 	}
