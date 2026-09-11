@@ -32,7 +32,7 @@ func WithApiKey(key string) func(ac *Client) {
 	}
 }
 
-func NewClient(baseUrl string, opts ...func(a *Client)) (*Client, error) {
+func NewApplicationApi(baseUrl string, opts ...func(a *Client)) (*Client, error) {
 	a := &Client{
 		client:  &http.Client{Timeout: time.Second * 5},
 		baseUrl: baseUrl,
