@@ -49,7 +49,7 @@ func (sa *ServerApi) ListDatabases(ctx context.Context, serverId int) ([]types.D
 	return databases, nil
 }
 
-func (sa *ServerApi) CreateDatabase(ctx context.Context, request CreateServerDatabaseRequest) error {
+func (sa *ServerApi) CreateDatabase(ctx context.Context, request types.CreateServerDatabaseRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (sa *ServerApi) CreateDatabase(ctx context.Context, request CreateServerDat
 	return nil
 }
 
-func (sa *ServerApi) UpdateDatabase(ctx context.Context, request UpdateServerDatabaseRequest) error {
+func (sa *ServerApi) UpdateDatabase(ctx context.Context, request types.UpdateServerDatabaseRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}

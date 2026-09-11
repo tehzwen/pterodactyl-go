@@ -65,7 +65,7 @@ func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListReques
 		}
 		defer resp.Body.Close()
 
-		var response ListNodesResponse
+		var response types.ListNodesResponse
 
 		if err := json.Unmarshal(b, &response); err != nil {
 			return nil, err
@@ -82,7 +82,7 @@ func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListReques
 	return nodes, nil
 }
 
-func (ac *NodeApi) GetNode(ctx context.Context, request GetNodeRequest) (*types.Node, error) {
+func (ac *NodeApi) GetNode(ctx context.Context, request types.GetNodeRequest) (*types.Node, error) {
 	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s/%d", ac.baseUrl, request.NodeId))
 	if err != nil {
@@ -125,7 +125,7 @@ func (ac *NodeApi) GetNode(ctx context.Context, request GetNodeRequest) (*types.
 	return &node, nil
 }
 
-func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request GetDeployableNodesRequest) ([]types.Node, error) {
+func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request types.GetDeployableNodesRequest) ([]types.Node, error) {
 	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s/deployable", ac.baseUrl))
 	if err != nil {
@@ -172,7 +172,7 @@ func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request GetDeployable
 		}
 		defer resp.Body.Close()
 
-		var response ListNodesResponse
+		var response types.ListNodesResponse
 
 		if err := json.Unmarshal(b, &response); err != nil {
 			return nil, err
@@ -189,7 +189,7 @@ func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request GetDeployable
 	return nodes, nil
 }
 
-func (ac *NodeApi) CreateNode(ctx context.Context, request CreateNodeRequest) (*types.Node, error) {
+func (ac *NodeApi) CreateNode(ctx context.Context, request types.CreateNodeRequest) (*types.Node, error) {
 	if err := request.Validate(); err != nil {
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (ac *NodeApi) CreateNode(ctx context.Context, request CreateNodeRequest) (*
 	return &node, nil
 }
 
-func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request UpdateNodeConfigurationRequest) error {
+func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request types.UpdateNodeConfigurationRequest) error {
 	if request.NodeId == 0 {
 		return errors.New("missing required field 'NodeId'")
 	}
@@ -308,7 +308,7 @@ func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types
 	return &response, nil
 }
 
-func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request ListNodeAllocationsRequest) ([]types.Allocation, error) {
+func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request types.ListNodeAllocationsRequest) ([]types.Allocation, error) {
 	headers := ac.authHeader
 	url, err := url.Parse(fmt.Sprintf("%s/%d/allocations", ac.baseUrl, request.NodeId))
 	if err != nil {
@@ -347,7 +347,7 @@ func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request ListNodeAllo
 		}
 		defer resp.Body.Close()
 
-		var response ListNodeAllocationsResponse
+		var response types.ListNodeAllocationsResponse
 		if err := json.Unmarshal(b, &response); err != nil {
 			return nil, err
 		}
@@ -363,7 +363,7 @@ func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request ListNodeAllo
 	return allocations, nil
 }
 
-func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request CreateNodeAllocationRequest) error {
+func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request types.CreateNodeAllocationRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
@@ -393,7 +393,7 @@ func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request CreateNodeA
 	return nil
 }
 
-func (ac *NodeApi) DeleteNodeAllocation(ctx context.Context, request DeleteNodeAllocationRequest) error {
+func (ac *NodeApi) DeleteNodeAllocation(ctx context.Context, request types.DeleteNodeAllocationRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}

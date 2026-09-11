@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/zerolog/log"
 	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg/application"
-	pterodactyl_node "github.com/tehzwen/pterodactyl-go/pkg/application/node"
+	"github.com/tehzwen/pterodactyl-go/pkg/application/types"
 )
 
 var (
@@ -22,7 +22,7 @@ func main() {
 		log.Fatal().Err(err)
 	}
 
-	newNode, err := ptero.Nodes.CreateNode(ctx, pterodactyl_node.CreateNodeRequest{
+	newNode, err := ptero.Nodes.CreateNode(ctx, types.CreateNodeRequest{
 		Name:       "test-node",
 		LocationId: 1,
 		FQDN:       "test.localdomain",
@@ -35,7 +35,7 @@ func main() {
 	}
 	fmt.Println(newNode)
 
-	if err := ptero.Nodes.CreateNodeAllocation(ctx, pterodactyl_node.CreateNodeAllocationRequest{
+	if err := ptero.Nodes.CreateNodeAllocation(ctx, types.CreateNodeAllocationRequest{
 		NodeId: newNode.Attributes.ID,
 		Ip:     "192.168.0.170",
 		Ports:  []string{"20200"},

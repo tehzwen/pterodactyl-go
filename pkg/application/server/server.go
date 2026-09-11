@@ -63,7 +63,7 @@ func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 		}
 		defer resp.Body.Close()
 
-		var response ListServersResponse
+		var response types.ListServersResponse
 		if err := json.Unmarshal(b, &response); err != nil {
 			return nil, err
 		}
@@ -80,7 +80,7 @@ func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 }
 
 // handles both internal server requests & get server by external ID requests
-func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include []GetServerDetailsIncludeField, external bool) (*types.Server, error) {
+func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include []types.GetServerDetailsIncludeField, external bool) (*types.Server, error) {
 	headers := sa.authHeader
 	baseUrl := fmt.Sprintf("%s/%s", sa.baseUrl, strconv.Itoa(serverId))
 	if external {
@@ -131,7 +131,7 @@ func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include
 	return nil, nil
 }
 
-func (sa *ServerApi) CreateServer(ctx context.Context, request CreateServerRequest) (*types.Server, error) {
+func (sa *ServerApi) CreateServer(ctx context.Context, request types.CreateServerRequest) (*types.Server, error) {
 	if err := request.Validate(); err != nil {
 		return nil, err
 	}
@@ -173,7 +173,7 @@ func (sa *ServerApi) CreateServer(ctx context.Context, request CreateServerReque
 	return &server, nil
 }
 
-func (sa *ServerApi) updateServer(ctx context.Context, path string, request UpdateServerRequest) error {
+func (sa *ServerApi) updateServer(ctx context.Context, path string, request types.UpdateServerRequest) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
@@ -204,15 +204,15 @@ func (sa *ServerApi) updateServer(ctx context.Context, path string, request Upda
 	return nil
 }
 
-func (sa *ServerApi) UpdateServerDetails(ctx context.Context, request UpdateServerDetailsRequest) error {
+func (sa *ServerApi) UpdateServerDetails(ctx context.Context, request types.UpdateServerDetailsRequest) error {
 	return sa.updateServer(ctx, fmt.Sprintf("%s/%d/details", sa.baseUrl, request.ServerId), request)
 }
 
-func (sa *ServerApi) UpdateServerBuild(ctx context.Context, request UpdateServerBuildRequest) error {
+func (sa *ServerApi) UpdateServerBuild(ctx context.Context, request types.UpdateServerBuildRequest) error {
 	return sa.updateServer(ctx, fmt.Sprintf("%s/%d/build", sa.baseUrl, request.ServerId), request)
 }
 
-func (sa *ServerApi) UpdateServerStartup(ctx context.Context, request UpdateServerStartupRequest) error {
+func (sa *ServerApi) UpdateServerStartup(ctx context.Context, request types.UpdateServerStartupRequest) error {
 	return sa.updateServer(ctx, fmt.Sprintf("%s/%d/startup", sa.baseUrl, request.ServerId), request)
 }
 
