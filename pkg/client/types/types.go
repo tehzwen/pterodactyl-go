@@ -1,5 +1,19 @@
 package types
 
+type PowerAction string
+
+var (
+	PowerActionStart   PowerAction = "start"
+	PowerActionStop    PowerAction = "stop"
+	PowerActionRestart PowerAction = "restart"
+	PowerActionKill    PowerAction = "kill"
+)
+
+type ManagePowerRequest struct {
+	ServerIdentifier string
+	Signal           PowerAction `json:"signal"` // start, stop, restart, kill
+}
+
 type ListServersParams struct {
 	Include string
 	Page    int
@@ -8,6 +22,11 @@ type ListServersParams struct {
 
 type ListServersResponse struct {
 	Servers  []Server `json:"data"`
+	MetaData `json:"meta"`
+}
+
+type GetServerActivityResponse struct {
+	Data     []ActivityLog `json:"data"`
 	MetaData `json:"meta"`
 }
 
@@ -107,4 +126,41 @@ type MetaData struct {
 		CurrentPage int `json:"current_page"`
 		TotalPages  int `json:"total_pages"`
 	} `json:"pagination"`
+}
+
+type ServerResources struct {
+	Object     string `json:"object"`
+	Attributes struct {
+		CurrentState string `json:"current_state"`
+		IsSuspended  bool   `json:"is_suspended"`
+		Resources    struct {
+			MemoryBytes    int64   `json:"memory_bytes"`
+			CPUAbsolute    float64 `json:"cpu_absolute"`
+			DiskBytes      int64   `json:"disk_bytes"`
+			NetworkRxBytes int64   `json:"network_rx_bytes"`
+			NetworkTxBytes int64   `json:"network_tx_bytes"`
+			Uptime         int64   `json:"uptime"`
+		} `json:"resources"`
+	} `json:"attributes"`
+}
+
+type ActivityLog struct {
+	Attributes struct {
+		ID                    string         `json:"id"`
+		Batch                 *string        `json:"batch"`
+		Event                 string         `json:"event"`
+		IsAPI                 bool           `json:"is_api"`
+		IP                    string         `json:"ip"`
+		Description           *string        `json:"description"`
+		Properties            map[string]any `json:"properties"`
+		HasAdditionalMetadata bool           `json:"has_additional_metadata"`
+		Timestamp             string         `json:"timestamp"`
+	} `json:"attributes"`
+}
+
+type ConsoleAccessDetails struct {
+	Data struct {
+		Token  string `json:"token"`
+		Socket string `json:"socket"`
+	} `json:"data"`
 }
