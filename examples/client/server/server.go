@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	API_KEY         = "ptlc_bQlBpIt3IfsDk1iliEa4R5PqbnedQNHRzOaXxgI8OaM"
-	PTERO_HOST_ADDR = "http://sailor:81" // ie: http://localhost
+	API_KEY         = ""
+	PTERO_HOST_ADDR = "" // ie: http://localhost
 )
 
 func main() {
