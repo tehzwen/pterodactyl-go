@@ -23,12 +23,12 @@ func NewServerApi(baseUrl string, client *http.Client, authHeader http.Header) *
 	return &ServerApi{
 		baseUrl:    baseUrl,
 		client:     client,
-		authHeader: authHeader,
+		authHeader: authHeader.Clone(),
 	}
 }
 
 func (sa *ServerApi) ListServers(ctx context.Context, params types.ListServersParams) ([]types.Server, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(sa.baseUrl)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (sa *ServerApi) ListServers(ctx context.Context, params types.ListServersPa
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := sa.client.Do(req)
 		if err != nil {
@@ -88,7 +88,7 @@ func (sa *ServerApi) ListServers(ctx context.Context, params types.ListServersPa
 }
 
 func (sa *ServerApi) GetServerDetails(ctx context.Context, serverIdentifier string) (*types.Server, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/servers/%s", sa.baseUrl, serverIdentifier))
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (sa *ServerApi) GetServerDetails(ctx context.Context, serverIdentifier stri
 		Header: headers,
 		URL:    url,
 	}
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -124,7 +124,7 @@ func (sa *ServerApi) GetServerDetails(ctx context.Context, serverIdentifier stri
 }
 
 func (sa *ServerApi) GetServerResources(ctx context.Context, serverIdentifier string) (*types.ServerResources, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/servers/%s/resources", sa.baseUrl, serverIdentifier))
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (sa *ServerApi) GetServerResources(ctx context.Context, serverIdentifier st
 		Header: headers,
 		URL:    url,
 	}
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -160,7 +160,7 @@ func (sa *ServerApi) GetServerResources(ctx context.Context, serverIdentifier st
 }
 
 func (sa *ServerApi) GetConsoleAccess(ctx context.Context, serverIdentifier string) (*types.ConsoleAccessDetails, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/servers/%s/websocket", sa.baseUrl, serverIdentifier))
 	if err != nil {
 		return nil, err
@@ -171,7 +171,7 @@ func (sa *ServerApi) GetConsoleAccess(ctx context.Context, serverIdentifier stri
 		Header: headers,
 		URL:    url,
 	}
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -196,7 +196,7 @@ func (sa *ServerApi) GetConsoleAccess(ctx context.Context, serverIdentifier stri
 }
 
 func (sa *ServerApi) GetServerActivity(ctx context.Context, serverIdentifier string) ([]types.ActivityLog, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/servers/%s/activity", sa.baseUrl, serverIdentifier))
 	if err != nil {
 		return nil, err
@@ -212,7 +212,7 @@ func (sa *ServerApi) GetServerActivity(ctx context.Context, serverIdentifier str
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := sa.client.Do(req)
 		if err != nil {
@@ -245,14 +245,14 @@ func (sa *ServerApi) GetServerActivity(ctx context.Context, serverIdentifier str
 }
 
 func (sa *ServerApi) ReinstallServer(ctx context.Context, serverIdentifier string) error {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/servers/%s/settings/reinstall", sa.baseUrl, serverIdentifier), nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -267,7 +267,7 @@ func (sa *ServerApi) ReinstallServer(ctx context.Context, serverIdentifier strin
 }
 
 func (sa *ServerApi) ManagePower(ctx context.Context, request types.ManagePowerRequest) error {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -279,7 +279,7 @@ func (sa *ServerApi) ManagePower(ctx context.Context, request types.ManagePowerR
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {

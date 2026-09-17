@@ -23,7 +23,7 @@ func NewUserApi(baseUrl string, client *http.Client, authHeader http.Header) *Us
 	return &UserApi{
 		baseUrl:    baseUrl,
 		client:     client,
-		authHeader: authHeader,
+		authHeader: authHeader.Clone(),
 	}
 }
 
@@ -68,7 +68,7 @@ func (ua *UserApi) ListUsers(ctx context.Context, filters types.ListUsersFilters
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := ua.client.Do(req)
 		if err != nil {
@@ -118,7 +118,7 @@ func (ua *UserApi) CreateUser(ctx context.Context, request types.CreateUserReque
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ua.client.Do(req)
 	if err != nil {
@@ -159,7 +159,7 @@ func (ua *UserApi) UpdateUser(ctx context.Context, request types.UpdateUserReque
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ua.client.Do(req)
 	if err != nil {
@@ -180,7 +180,7 @@ func (ua *UserApi) DeleteUser(ctx context.Context, userId int) error {
 	}
 
 	req.Header = ua.authHeader
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ua.client.Do(req)
 	if err != nil {

@@ -24,13 +24,13 @@ func NewServerApi(baseUrl string, client *http.Client, authHeader http.Header) *
 	return &ServerApi{
 		baseUrl:    baseUrl,
 		client:     client,
-		authHeader: authHeader,
+		authHeader: authHeader.Clone(),
 	}
 }
 
 // SERVERS
 func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRequest) ([]types.Server, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(sa.baseUrl)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := sa.client.Do(req)
 		if err != nil {
@@ -81,7 +81,7 @@ func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 
 // handles both internal server requests & get server by external ID requests
 func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include []types.GetServerDetailsIncludeField, external bool) (*types.Server, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	baseUrl := fmt.Sprintf("%s/%s", sa.baseUrl, strconv.Itoa(serverId))
 	if external {
 		baseUrl = fmt.Sprintf("%s/external/%s", sa.baseUrl, strconv.Itoa(serverId))
@@ -108,7 +108,7 @@ func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include
 		URL:    url,
 	}
 
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 	resp, err := sa.client.Do(req)
 	if err != nil {
 		return nil, err
@@ -136,7 +136,7 @@ func (sa *ServerApi) CreateServer(ctx context.Context, request types.CreateServe
 		return nil, err
 	}
 
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (sa *ServerApi) CreateServer(ctx context.Context, request types.CreateServe
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -178,7 +178,7 @@ func (sa *ServerApi) updateServer(ctx context.Context, path string, request type
 		return err
 	}
 
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -190,7 +190,7 @@ func (sa *ServerApi) updateServer(ctx context.Context, path string, request type
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -218,14 +218,14 @@ func (sa *ServerApi) UpdateServerStartup(ctx context.Context, request types.Upda
 
 // helper for all POST endpoints
 func (sa *ServerApi) postServer(ctx context.Context, path string) error {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	req, err := http.NewRequest("POST", path, nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -258,7 +258,7 @@ func (sa *ServerApi) DeleteServer(ctx context.Context, serverId int) error {
 	}
 
 	req.Header = sa.authHeader
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {

@@ -25,13 +25,13 @@ func NewNodeApi(baseUrl string, client *http.Client, authHeader http.Header) *No
 	return &NodeApi{
 		baseUrl:    baseUrl,
 		client:     client,
-		authHeader: authHeader,
+		authHeader: authHeader.Clone(),
 	}
 }
 
 // NODES
 func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListRequest) ([]types.Node, error) {
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	url, err := url.Parse(ac.baseUrl)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListReques
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := ac.client.Do(req)
 		if err != nil {
@@ -83,7 +83,7 @@ func (ac *NodeApi) ListNodes(ctx context.Context, request *types.PteroListReques
 }
 
 func (ac *NodeApi) GetNode(ctx context.Context, request types.GetNodeRequest) (*types.Node, error) {
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/%d", ac.baseUrl, request.NodeId))
 	if err != nil {
 		return nil, err
@@ -100,7 +100,7 @@ func (ac *NodeApi) GetNode(ctx context.Context, request types.GetNodeRequest) (*
 		Header: headers,
 		URL:    url,
 	}
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
@@ -126,7 +126,7 @@ func (ac *NodeApi) GetNode(ctx context.Context, request types.GetNodeRequest) (*
 }
 
 func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request types.GetDeployableNodesRequest) ([]types.Node, error) {
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/deployable", ac.baseUrl))
 	if err != nil {
 		return nil, err
@@ -155,7 +155,7 @@ func (ac *NodeApi) GetDeployableNodes(ctx context.Context, request types.GetDepl
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := ac.client.Do(req)
 		if err != nil {
@@ -194,7 +194,7 @@ func (ac *NodeApi) CreateNode(ctx context.Context, request types.CreateNodeReque
 		return nil, err
 	}
 
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return nil, err
@@ -205,7 +205,7 @@ func (ac *NodeApi) CreateNode(ctx context.Context, request types.CreateNodeReque
 		return nil, err
 	}
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
@@ -235,7 +235,7 @@ func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request types.Up
 		return errors.New("missing required field 'NodeId'")
 	}
 
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -246,7 +246,7 @@ func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request types.Up
 		return err
 	}
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
@@ -272,7 +272,7 @@ func (ac *NodeApi) UpdateNodeConfiguration(ctx context.Context, request types.Up
 }
 
 func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types.NodeConfiguration, error) {
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/%d/configuration", ac.baseUrl, nodeId))
 	if err != nil {
 		return nil, err
@@ -283,7 +283,7 @@ func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types
 		Header: headers,
 		URL:    url,
 	}
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
@@ -309,7 +309,7 @@ func (ac *NodeApi) GetNodeConfiguration(ctx context.Context, nodeId int) (*types
 }
 
 func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request types.ListNodeAllocationsRequest) ([]types.Allocation, error) {
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/%d/allocations", ac.baseUrl, request.NodeId))
 	if err != nil {
 		return nil, err
@@ -330,7 +330,7 @@ func (ac *NodeApi) ListNodeAllocations(ctx context.Context, request types.ListNo
 			Header: headers,
 			URL:    url,
 		}
-		req.WithContext(ctx)
+		req = req.WithContext(ctx)
 
 		resp, err := ac.client.Do(req)
 		if err != nil {
@@ -368,7 +368,7 @@ func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request types.Creat
 		return err
 	}
 
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -379,7 +379,7 @@ func (ac *NodeApi) CreateNodeAllocation(ctx context.Context, request types.Creat
 		return err
 	}
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
@@ -398,13 +398,13 @@ func (ac *NodeApi) DeleteNodeAllocation(ctx context.Context, request types.Delet
 		return err
 	}
 
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%d/allocations/%d", ac.baseUrl, request.NodeId, request.AllocationId), nil)
 	if err != nil {
 		return err
 	}
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {
@@ -422,13 +422,13 @@ func (ac *NodeApi) DeleteNode(ctx context.Context, nodeId int) error {
 		return fmt.Errorf("missing required field '%s'", "NodeId")
 	}
 
-	headers := ac.authHeader
+	headers := ac.authHeader.Clone()
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%d", ac.baseUrl, nodeId), nil)
 	if err != nil {
 		return err
 	}
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := ac.client.Do(req)
 	if err != nil {

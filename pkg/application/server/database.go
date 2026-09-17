@@ -13,7 +13,7 @@ import (
 )
 
 func (sa *ServerApi) ListDatabases(ctx context.Context, serverId int) ([]types.Database, error) {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	url, err := url.Parse(fmt.Sprintf("%s/%d/databases", sa.baseUrl, serverId))
 	if err != nil {
 		return nil, err
@@ -24,7 +24,7 @@ func (sa *ServerApi) ListDatabases(ctx context.Context, serverId int) ([]types.D
 		Header: headers,
 		URL:    url,
 	}
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -54,7 +54,7 @@ func (sa *ServerApi) CreateDatabase(ctx context.Context, request types.CreateSer
 		return err
 	}
 
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -66,7 +66,7 @@ func (sa *ServerApi) CreateDatabase(ctx context.Context, request types.CreateSer
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -85,7 +85,7 @@ func (sa *ServerApi) UpdateDatabase(ctx context.Context, request types.UpdateSer
 		return err
 	}
 
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	requestBytes, err := json.Marshal(request)
 	if err != nil {
 		return err
@@ -97,7 +97,7 @@ func (sa *ServerApi) UpdateDatabase(ctx context.Context, request types.UpdateSer
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -112,14 +112,14 @@ func (sa *ServerApi) UpdateDatabase(ctx context.Context, request types.UpdateSer
 }
 
 func (sa *ServerApi) ResetDatabasePassword(ctx context.Context, serverId, databaseId int) error {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/%d/databases/%d/reset-password", sa.baseUrl, serverId, databaseId), nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
@@ -133,14 +133,14 @@ func (sa *ServerApi) ResetDatabasePassword(ctx context.Context, serverId, databa
 }
 
 func (sa *ServerApi) DeleteDatabase(ctx context.Context, serverId, databaseId int) error {
-	headers := sa.authHeader
+	headers := sa.authHeader.Clone()
 	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/%d/databases/%d", sa.baseUrl, serverId, databaseId), nil)
 	if err != nil {
 		return err
 	}
 
 	req.Header = headers
-	req.WithContext(ctx)
+	req = req.WithContext(ctx)
 
 	resp, err := sa.client.Do(req)
 	if err != nil {
