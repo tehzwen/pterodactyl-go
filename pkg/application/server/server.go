@@ -82,9 +82,9 @@ func (sa *ServerApi) ListServers(ctx context.Context, request *types.PteroListRe
 // handles both internal server requests & get server by external ID requests
 func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include []types.GetServerDetailsIncludeField, external bool) (*types.Server, error) {
 	headers := sa.authHeader.Clone()
-	baseUrl := fmt.Sprintf("%s/%s", sa.baseUrl, strconv.Itoa(serverId))
+	baseUrl := fmt.Sprintf("%s/%d", sa.baseUrl, serverId)
 	if external {
-		baseUrl = fmt.Sprintf("%s/external/%s", sa.baseUrl, strconv.Itoa(serverId))
+		baseUrl = fmt.Sprintf("%s/external/%d", sa.baseUrl, serverId)
 	}
 
 	url, err := url.Parse(baseUrl)
@@ -124,11 +124,12 @@ func (sa *ServerApi) GetServerDetails(ctx context.Context, serverId int, include
 	}
 	defer resp.Body.Close()
 
-	fmt.Printf("bytes - %s\n", string(b))
+	var server types.Server
+	if err := json.Unmarshal(b, &server); err != nil {
+		return nil, err
+	}
 
-	// TODO - marshal to server and return
-
-	return nil, nil
+	return &server, nil
 }
 
 func (sa *ServerApi) CreateServer(ctx context.Context, request types.CreateServerRequest) (*types.Server, error) {

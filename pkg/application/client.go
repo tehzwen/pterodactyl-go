@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/tehzwen/pterodactyl-go/pkg/application/nest"
 	"github.com/tehzwen/pterodactyl-go/pkg/application/node"
 	"github.com/tehzwen/pterodactyl-go/pkg/application/server"
 	"github.com/tehzwen/pterodactyl-go/pkg/application/user"
@@ -17,6 +18,7 @@ type Client struct {
 	Servers *server.ServerApi
 	Nodes   *node.NodeApi
 	Users   *user.UserApi
+	Nests   *nest.NestApi
 }
 
 func (ac *Client) buildHeaders() http.Header {
@@ -45,5 +47,6 @@ func NewApplicationApi(baseUrl string, opts ...func(a *Client)) (*Client, error)
 	a.Servers = server.NewServerApi(fmt.Sprintf("%s/api/application/servers", a.baseUrl), a.client, a.buildHeaders())
 	a.Nodes = node.NewNodeApi(fmt.Sprintf("%s/api/application/nodes", a.baseUrl), a.client, a.buildHeaders())
 	a.Users = user.NewUserApi(fmt.Sprintf("%s/api/application/users", a.baseUrl), a.client, a.buildHeaders())
+	a.Nests = nest.NewNestApi(fmt.Sprintf("%s/api/application/nests", a.baseUrl), a.client, a.buildHeaders())
 	return a, nil
 }
