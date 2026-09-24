@@ -31,10 +31,7 @@ func main() {
 		},
 		DockerImage: "testimage",
 		Startup:     "echo 'hi'",
-		Allocation: struct {
-			Default int "json:\"default\""
-			Backups int "json:\"backups\""
-		}{
+		Allocation: types.CreateServerAllocation{
 			Default: 2,
 		},
 		Environment: map[string]string{
