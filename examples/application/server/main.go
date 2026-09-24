@@ -31,7 +31,7 @@ func main() {
 		},
 		DockerImage: "testimage",
 		Startup:     "echo 'hi'",
-		Allocation: types.CreateServerAllocation{
+		Allocation: &types.CreateServerAllocation{
 			Default: 2,
 		},
 		Environment: map[string]string{
