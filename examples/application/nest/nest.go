@@ -38,7 +38,7 @@ func main() {
 	}
 	fmt.Printf("%+v\n\n", nestEggs)
 
-	eggDetails, err := ptero.Nests.GetEggDetails(ctx, nest.Attributes.ID, nestEggs[0].Attributes.ID, []string{})
+	eggDetails, err := ptero.Nests.GetEggDetails(ctx, nest.Attributes.ID, nestEggs[0].Attributes.ID, []string{"variables,nest"})
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to get egg details")
 	}

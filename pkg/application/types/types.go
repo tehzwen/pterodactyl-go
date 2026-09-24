@@ -102,44 +102,44 @@ type NodeConfiguration struct {
 	} `json:"system"`
 }
 
+type ServerContainer struct {
+	StartupCommand string         `json:"startup_command"`
+	Image          string         `json:"image"`
+	Installed      int            `json:"installed"`
+	Environment    map[string]any `json:"environment"`
+	SkipScripts    bool           `json:"skip_scripts"`
+}
+
+type ServerLimits struct {
+	MemoryMB    int  `json:"number"`
+	SwapMB      int  `json:"swap"`
+	DiskMB      int  `json:"disk"`
+	Io          int  `json:"io"`
+	CPU         int  `json:"cpu"`
+	Threads     int  `json:"threads"` // confirm this field, null at the time
+	OOMDisabled bool `json:"oom_disabled"`
+}
+
 type Server struct {
 	Attributes struct {
-		Id          int    `json:"id"`
-		ExternalId  string `json:"external_id"`
-		UUID        string `json:"uuid"`
-		Identifier  string `json:"identifier"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Status      string `json:"status"`
-		Suspended   bool   `json:"suspended"`
-		Limits      struct {
-			MemoryMB    int  `json:"number"`
-			SwapMB      int  `json:"swap"`
-			DiskMB      int  `json:"disk"`
-			Io          int  `json:"io"`
-			CPU         int  `json:"cpu"`
-			Threads     int  `json:"threads"` // confirm this field, null at the time
-			OOMDisabled bool `json:"oom_disabled"`
-		} `json:"limits"`
-		FeatureLimits struct {
-			Databases   int `json:"databases"`
-			Allocations int `json:"allocations"`
-			Backups     int `json:"backups"`
-		} `json:"feature_limits"`
-		User       int `json:"user"`
-		Node       int `json:"node"`
-		Allocation int `json:"allocation"`
-		Nest       int `json:"nest"`
-		Egg        int `json:"egg"`
-		Container  struct {
-			StartupCommand string         `json:"startup_command"`
-			Image          string         `json:"image"`
-			Installed      int            `json:"installed"`
-			Environment    map[string]any `json:"environment"`
-			SkipScripts    bool           `json:"skip_scripts"`
-		} `json:"container"`
-		CreatedAt time.Time `json:"created_at"`
-		UpdatedAt time.Time `json:"updated_at"`
+		Id            int             `json:"id"`
+		ExternalId    string          `json:"external_id"`
+		UUID          string          `json:"uuid"`
+		Identifier    string          `json:"identifier"`
+		Name          string          `json:"name"`
+		Description   string          `json:"description"`
+		Status        string          `json:"status"`
+		Suspended     bool            `json:"suspended"`
+		Limits        ServerLimits    `json:"limits"`
+		FeatureLimits FeatureLimits   `json:"feature_limits"`
+		User          int             `json:"user"`
+		Node          int             `json:"node"`
+		Allocation    int             `json:"allocation"`
+		Nest          int             `json:"nest"`
+		Egg           int             `json:"egg"`
+		Container     ServerContainer `json:"container"`
+		CreatedAt     time.Time       `json:"created_at"`
+		UpdatedAt     time.Time       `json:"updated_at"`
 		// relationships
 		Relationships struct {
 			Node *Node `json:"node"`
@@ -242,15 +242,39 @@ type Nest struct {
 
 type Egg struct {
 	Attributes struct {
-		ID          int       `json:"id"`
-		UUID        string    `json:"uuid"`
-		Name        string    `json:"name"`
-		Nest        int       `json:"nest"`
-		Author      string    `json:"author"`
-		Description string    `json:"description"`
-		DockerImage string    `json:"docker_image"`
-		Startup     string    `json:"startup"`
-		CreatedAt   time.Time `json:"created_at"`
-		UpdatedAt   time.Time `json:"updated_at"`
+		ID            int       `json:"id"`
+		UUID          string    `json:"uuid"`
+		Name          string    `json:"name"`
+		Nest          int       `json:"nest"`
+		Author        string    `json:"author"`
+		Description   string    `json:"description"`
+		DockerImage   string    `json:"docker_image"`
+		Startup       string    `json:"startup"`
+		CreatedAt     time.Time `json:"created_at"`
+		UpdatedAt     time.Time `json:"updated_at"`
+		Relationships struct {
+			Nest struct {
+				Data Nest `json:"data"`
+			} `json:"nest"`
+			Variables struct {
+				Data []EggVariable `json:"data"`
+			} `json:"variables"`
+		} `json:"relationships"`
+	} `json:"attributes"`
+}
+
+type EggVariable struct {
+	Attributes struct {
+		ID           int       `json:"id"`
+		EggID        int       `json:"egg_id"`
+		Name         string    `json:"name"`
+		Description  string    `json:"description"`
+		EnvVariable  string    `json:"env_variable"`
+		DefaultValue string    `json:"default_value"`
+		UserViewable bool      `json:"user_viewable"`
+		UserEditable bool      `json:"user_editable"`
+		Rules        string    `json:"rules"`
+		CreatedAt    time.Time `json:"created_at"`
+		UpdatedAt    time.Time `json:"updated_at"`
 	} `json:"attributes"`
 }

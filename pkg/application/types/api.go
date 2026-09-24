@@ -177,20 +177,22 @@ type ListNodesResponse struct {
 	MetaData `json:"meta"`
 }
 
+type CreateServerAllocation struct {
+	Default int `json:"default"`
+	Backups int `json:"backups"`
+}
+
 type CreateServerRequest struct {
-	Name          string            `json:"name"`
-	User          int               `json:"user"`
-	Egg           int               `json:"egg"`
-	DockerImage   string            `json:"docker_image,omitempty"`
-	Startup       string            `json:"startup,omitempty"`
-	Environment   map[string]string `json:"environment,omitempty"`
-	Limits        Limits            `json:"limits"`
-	FeatureLimits FeatureLimits     `json:"feature_limits"`
-	Allocation    struct {
-		Default int `json:"default"`
-		Backups int `json:"backups"`
-	} `json:"allocation"`
-	Deploy map[string]string `json:"deploy,omitempty"`
+	Name          string                 `json:"name"`
+	User          int                    `json:"user"`
+	Egg           int                    `json:"egg"`
+	DockerImage   string                 `json:"docker_image,omitempty"`
+	Startup       string                 `json:"startup,omitempty"`
+	Environment   map[string]string      `json:"environment,omitempty"`
+	Limits        Limits                 `json:"limits"`
+	FeatureLimits FeatureLimits          `json:"feature_limits"`
+	Allocation    CreateServerAllocation `json:"allocation"`
+	Deploy        map[string]string      `json:"deploy,omitempty"`
 }
 
 func (r CreateServerRequest) Validate() error {
