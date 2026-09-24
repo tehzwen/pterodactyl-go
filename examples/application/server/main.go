@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/rs/zerolog/log"
 	pterodactyl "github.com/tehzwen/pterodactyl-go/pkg/application"
@@ -11,8 +10,8 @@ import (
 )
 
 func main() {
-	PTERO_HOST_ADDR := "http://localhost"
-	API_KEY := os.Getenv("PTERO_API_KEY")
+	PTERO_HOST_ADDR := ""
+	API_KEY := ""
 
 	ctx := context.Background()
 	ptero, err := pterodactyl.NewApplicationApi(PTERO_HOST_ADDR, pterodactyl.WithApiKey(API_KEY))
@@ -20,24 +19,36 @@ func main() {
 		log.Fatal().Err(err).Msg("could not create new application client")
 	}
 
+	mcEgg, err := ptero.Nests.GetEggDetails(ctx, 1, 4, []string{"variables"})
+	if err != nil {
+		log.Fatal().Err(err).Msg("could not lookup mc egg")
+	}
+
 	testServer, err := ptero.Servers.CreateServer(ctx, types.CreateServerRequest{
 		Name: "zach test server",
 		User: 1,
-		Egg:  1,
+		Egg:  mcEgg.Attributes.ID,
 		Limits: types.Limits{
-			Memory: 100,
-			Disk:   100,
-			IO:     10,
+			Memory: 2048,
+			Disk:   2000,
+			IO:     500,
+			CPU:    100,
 		},
-		DockerImage: "testimage",
-		Startup:     "echo 'hi'",
-		Allocation: &types.CreateServerAllocation{
-			Default: 2,
-		},
+		DockerImage: mcEgg.Attributes.DockerImage,
+		Startup:     mcEgg.Attributes.Startup,
+		// Allocation: &types.CreateServerAllocation{
+		// 	Default: 1,
+		// },
 		Environment: map[string]string{
-			"SPONGE_VERSION": "1.12.2-7.3.0",
-			"SERVER_JARFILE": "server.jar",
+			"SERVER_JARFILE":  "server.jar",
+			"VANILLA_VERSION": "latest",
 		},
+		Deploy: &types.CreateServerDeploy{
+			Locations:   []int{1},
+			DedicatedIp: false,
+			PortRange:   []int{},
+		},
+		StartOnCompletion: true,
 	})
 	if err != nil {
 		log.Fatal().Err(err).Msg("could not create server")

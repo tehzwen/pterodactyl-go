@@ -199,8 +199,8 @@ type CreateServerRequest struct {
 	Environment       map[string]string       `json:"environment,omitempty"`
 	Limits            Limits                  `json:"limits"`
 	FeatureLimits     FeatureLimits           `json:"feature_limits"`
-	Allocation        *CreateServerAllocation `json:"allocation"`
-	Deploy            *CreateServerDeploy     `json:"deploy"`
+	Allocation        *CreateServerAllocation `json:"allocation,omitempty"`
+	Deploy            *CreateServerDeploy     `json:"deploy,omitempty"`
 	OOMDisabled       bool                    `json:"oom_disabled"`
 	StartOnCompletion bool                    `json:"start_on_completion"`
 }
