@@ -182,17 +182,27 @@ type CreateServerAllocation struct {
 	Backups int `json:"backups"`
 }
 
+type CreateServerDeploy struct {
+	// required
+	Locations   []int `json:"locations"`
+	DedicatedIp bool  `json:"dedicated_ip"`
+	// leave empty to dynamically grab empty available, required ports
+	PortRange []int `json:"port_range"`
+}
+
 type CreateServerRequest struct {
-	Name          string                 `json:"name"`
-	User          int                    `json:"user"`
-	Egg           int                    `json:"egg"`
-	DockerImage   string                 `json:"docker_image,omitempty"`
-	Startup       string                 `json:"startup,omitempty"`
-	Environment   map[string]string      `json:"environment,omitempty"`
-	Limits        Limits                 `json:"limits"`
-	FeatureLimits FeatureLimits          `json:"feature_limits"`
-	Allocation    CreateServerAllocation `json:"allocation"`
-	Deploy        map[string]string      `json:"deploy,omitempty"`
+	Name              string                  `json:"name"`
+	User              int                     `json:"user"`
+	Egg               int                     `json:"egg"`
+	DockerImage       string                  `json:"docker_image,omitempty"`
+	Startup           string                  `json:"startup,omitempty"`
+	Environment       map[string]string       `json:"environment,omitempty"`
+	Limits            Limits                  `json:"limits"`
+	FeatureLimits     FeatureLimits           `json:"feature_limits"`
+	Allocation        *CreateServerAllocation `json:"allocation,omitempty"`
+	Deploy            *CreateServerDeploy     `json:"deploy,omitempty"`
+	OOMDisabled       bool                    `json:"oom_disabled"`
+	StartOnCompletion bool                    `json:"start_on_completion"`
 }
 
 func (r CreateServerRequest) Validate() error {
@@ -214,6 +224,14 @@ func (r CreateServerRequest) Validate() error {
 	}
 	if r.Limits.IO == 0 {
 		return errors.New("limits.io is required")
+	}
+	if r.Allocation != nil && r.Deploy != nil {
+		return errors.New("allocation and deploy cannot both be specified, please choose one")
+	}
+	if r.Deploy != nil {
+		if len(r.Deploy.Locations) <= 0 {
+			return errors.New("deploy locations cannot be empty")
+		}
 	}
 
 	return nil
