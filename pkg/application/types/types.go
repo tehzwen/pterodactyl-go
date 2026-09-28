@@ -111,13 +111,13 @@ type ServerContainer struct {
 }
 
 type ServerLimits struct {
-	MemoryMB    int  `json:"number"`
-	SwapMB      int  `json:"swap"`
-	DiskMB      int  `json:"disk"`
-	Io          int  `json:"io"`
-	CPU         int  `json:"cpu"`
-	Threads     int  `json:"threads"` // confirm this field, null at the time
-	OOMDisabled bool `json:"oom_disabled"`
+	MemoryMB    int    `json:"number"`
+	SwapMB      int    `json:"swap"`
+	DiskMB      int    `json:"disk"`
+	Io          int    `json:"io"`
+	CPU         int    `json:"cpu"`
+	Threads     string `json:"threads,omitempty"` // confirm this field, null at the time
+	OOMDisabled bool   `json:"oom_disabled"`
 }
 
 type Server struct {
