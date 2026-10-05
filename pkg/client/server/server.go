@@ -292,3 +292,30 @@ func (sa *ServerApi) ManagePower(ctx context.Context, request types.ManagePowerR
 
 	return nil
 }
+
+func (sa *ServerApi) SendConsoleCommand(ctx context.Context, request types.SendConsoleCommandRequest) error {
+	headers := sa.authHeader.Clone()
+	requestBytes, err := json.Marshal(request)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", fmt.Sprintf("%s/servers/%s/command", sa.baseUrl, request.ServerIdentifier), bytes.NewBuffer(requestBytes))
+	if err != nil {
+		return err
+	}
+
+	req.Header = headers
+	req = req.WithContext(ctx)
+
+	resp, err := sa.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if err := types.CheckResponse(resp); err != nil {
+		return err
+	}
+
+	return nil
+}

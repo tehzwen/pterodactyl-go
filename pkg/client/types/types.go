@@ -30,6 +30,11 @@ type GetServerActivityResponse struct {
 	MetaData `json:"meta"`
 }
 
+type SendConsoleCommandRequest struct {
+	ServerIdentifier string
+	Command          string `json:"command"`
+}
+
 type Server struct {
 	Attributes struct {
 		ServerOwner     bool                `json:"server_owner"`
