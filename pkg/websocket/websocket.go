@@ -72,15 +72,6 @@ func (wsc *WebSocketConnection) AuthAndListen(onEvent func(m SocketMessage)) err
 			break
 		}
 
-		if message.Event == SocketEvetnTypeTokenExpiring {
-			if err := wsc.SendCommand(SocketMessage{
-				Event: SocketEventTypeAuth,
-				Args:  []string{wsc.token},
-			}); err != nil {
-				return err
-			}
-		}
-
 		onEvent(message)
 	}
 
