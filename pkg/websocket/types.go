@@ -14,7 +14,7 @@ var (
 	SocketEventTypeStats         SocketEventType = "stats"
 	SocketEventTypeJWTError      SocketEventType = "jwt error"
 	SocketEventTypeDaemonMessage SocketEventType = "daemon message"
-	SocketEvetnTypeTokenExpiring SocketEventType = "token expiring"
+	SocketEventTypeTokenExpiring SocketEventType = "token expiring"
 )
 
 type SocketMessage struct {
