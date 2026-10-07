@@ -46,8 +46,9 @@ func main() {
 	}
 
 	go func() {
-		if err := ws.AuthAndListen(func(received websocket.SocketMessage) {
+		if err := ws.AuthAndListen(func(received websocket.SocketMessage) error {
 			fmt.Printf("Received: %+v\n", received)
+			return nil
 		}); err != nil {
 			panic(err)
 		}

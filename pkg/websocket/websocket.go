@@ -63,7 +63,7 @@ func (wsc *WebSocketConnection) SendCommand(message SocketMessage) error {
 	return nil
 }
 
-func (wsc *WebSocketConnection) AuthAndListen(onEvent func(m SocketMessage)) error {
+func (wsc *WebSocketConnection) AuthAndListen(onEvent func(m SocketMessage) error) error {
 	for {
 		var message SocketMessage
 		err := wsc.conn.ReadJSON(&message)
@@ -72,7 +72,9 @@ func (wsc *WebSocketConnection) AuthAndListen(onEvent func(m SocketMessage)) err
 			break
 		}
 
-		onEvent(message)
+		if err := onEvent(message); err != nil {
+			return err
+		}
 	}
 
 	return nil
