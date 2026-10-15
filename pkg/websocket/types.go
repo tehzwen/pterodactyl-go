@@ -15,6 +15,8 @@ var (
 	SocketEventTypeJWTError      SocketEventType = "jwt error"
 	SocketEventTypeDaemonMessage SocketEventType = "daemon message"
 	SocketEventTypeTokenExpiring SocketEventType = "token expiring"
+	SocketEventTypeSendStats     SocketEventType = "send stats"
+	SocketEventTypeSendLogs      SocketEventType = "send logs"
 )
 
 type SocketMessage struct {
