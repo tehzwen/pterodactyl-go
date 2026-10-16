@@ -55,6 +55,24 @@ func main() {
 
 	fmt.Printf("%+v\n\n", logs)
 
+	files, err := ptero.Servers.ListServerFiles(ctx, types.ListServerFilesParams{
+		ServerId:   server.Attributes.Identifier,
+		FolderPath: "/",
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(files)
+
+	// contents, err := ptero.Servers.GetServerFileContents(ctx, types.GetServerFileContentsParams{
+	// 	ServerId: server.Attributes.Identifier,
+	// 	File:     "server.properties", // update to file that actually exists on the server
+	// })
+	// if err != nil {
+	// 	panic(err)
+	// }
+	// fmt.Println(contents)
+
 	// if err := ptero.Servers.ReinstallServer(ctx, server.Attributes.Identifier); err != nil {
 	// 	panic(err)
 	// }

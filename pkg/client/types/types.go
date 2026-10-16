@@ -1,5 +1,10 @@
 package types
 
+import (
+	"errors"
+	"time"
+)
+
 type PowerAction string
 
 var (
@@ -33,6 +38,43 @@ type GetServerActivityResponse struct {
 type SendConsoleCommandRequest struct {
 	ServerIdentifier string
 	Command          string `json:"command"`
+}
+
+type ListServerFilesParams struct {
+	ServerId   string
+	FolderPath string
+}
+
+type ListServerFilesResponse struct {
+	Files []struct {
+		Attributes struct {
+			Name       string    `json:"name"`
+			Mode       string    `json:"mode"`
+			ModeBits   string    `json:"mode_bits"`
+			Size       int64     `json:"size"`
+			IsFile     bool      `json:"is_file"`
+			IsSymlink  bool      `json:"is_symlinhk"`
+			MimeType   string    `json:"mimetype"`
+			CreatedAt  time.Time `json:"created_at"`
+			ModifiedAt time.Time `json:"modified_at"`
+		} `json:"attributes"`
+	} `json:"data"`
+}
+
+type GetServerFileContentsParams struct {
+	ServerId string
+	File     string
+}
+
+func (gsfcp *GetServerFileContentsParams) Validate() error {
+	if gsfcp.ServerId == "" {
+		return errors.New("get file content must include ServerId as param")
+	}
+	if gsfcp.File == "" {
+		return errors.New("get file content must include File as param")
+	}
+
+	return nil
 }
 
 type Server struct {
