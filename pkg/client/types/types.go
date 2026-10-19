@@ -46,19 +46,21 @@ type ListServerFilesParams struct {
 }
 
 type ListServerFilesResponse struct {
-	Files []struct {
-		Attributes struct {
-			Name       string    `json:"name"`
-			Mode       string    `json:"mode"`
-			ModeBits   string    `json:"mode_bits"`
-			Size       int64     `json:"size"`
-			IsFile     bool      `json:"is_file"`
-			IsSymlink  bool      `json:"is_symlinhk"`
-			MimeType   string    `json:"mimetype"`
-			CreatedAt  time.Time `json:"created_at"`
-			ModifiedAt time.Time `json:"modified_at"`
-		} `json:"attributes"`
-	} `json:"data"`
+	Files []ServerFile `json:"data"`
+}
+
+type ServerFile struct {
+	Attributes struct {
+		Name       string    `json:"name"`
+		Mode       string    `json:"mode"`
+		ModeBits   string    `json:"mode_bits"`
+		Size       int64     `json:"size"`
+		IsFile     bool      `json:"is_file"`
+		IsSymlink  bool      `json:"is_symlink"`
+		MimeType   string    `json:"mimetype"`
+		CreatedAt  time.Time `json:"created_at"`
+		ModifiedAt time.Time `json:"modified_at"`
+	} `json:"attributes"`
 }
 
 type GetServerFileContentsParams struct {
