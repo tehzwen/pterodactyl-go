@@ -27,7 +27,7 @@ func main() {
 
 	fmt.Printf("%+v\n\n", servers[0])
 
-	server, err := ptero.Servers.GetServerDetails(ctx, servers[0].Attributes.Identifier)
+	server, err := ptero.Servers.GetServerDetails(ctx, "4899bd7b")
 	if err != nil {
 		panic(err)
 	}
@@ -74,6 +74,14 @@ func main() {
 	// fmt.Println(contents)
 
 	// if err := ptero.Servers.ReinstallServer(ctx, server.Attributes.Identifier); err != nil {
+	// 	panic(err)
+	// }
+
+	// if err := ptero.Servers.WriteServerFileContents(ctx, types.WriteServerFileContentsParams{
+	// 	ServerId: server.Attributes.Identifier,
+	// 	File:     "/test-file.txt",
+	// 	Contents: []byte("this is a test!"),
+	// }); err != nil {
 	// 	panic(err)
 	// }
 

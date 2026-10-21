@@ -79,6 +79,22 @@ func (gsfcp *GetServerFileContentsParams) Validate() error {
 	return nil
 }
 
+type WriteServerFileContentsParams struct {
+	ServerId string
+	File     string
+	Contents []byte
+}
+
+func (wsfcp *WriteServerFileContentsParams) Validate() error {
+	if wsfcp.ServerId == "" {
+		return errors.New("get file content must include ServerId as param")
+	}
+	if wsfcp.File == "" {
+		return errors.New("get file content must include File as param")
+	}
+	return nil
+}
+
 type Server struct {
 	Attributes struct {
 		ServerOwner     bool                `json:"server_owner"`

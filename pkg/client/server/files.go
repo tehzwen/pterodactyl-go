@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -99,4 +100,36 @@ func (sa *ServerApi) GetServerFileContents(ctx context.Context, params types.Get
 	defer resp.Body.Close()
 
 	return string(b), nil
+}
+
+func (sa *ServerApi) WriteServerFileContents(ctx context.Context, params types.WriteServerFileContentsParams) error {
+	headers := sa.authHeader.Clone()
+	if err := params.Validate(); err != nil {
+		return err
+	}
+
+	url, err := url.Parse(fmt.Sprintf("%s/servers/%s/files/write?file=%s", sa.baseUrl, params.ServerId, params.File))
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("POST", url.String(), bytes.NewBuffer(params.Contents))
+	if err != nil {
+		return err
+	}
+
+	headers.Set("Content-Type", "text/plain")
+	req.Header = headers
+	req = req.WithContext(ctx)
+
+	resp, err := sa.client.Do(req)
+	if err != nil {
+		return err
+	}
+
+	if err := types.CheckResponse(resp); err != nil {
+		return err
+	}
+
+	return nil
 }
