@@ -111,7 +111,7 @@ type ServerContainer struct {
 }
 
 type ServerLimits struct {
-	MemoryMB    int    `json:"number"`
+	MemoryMB    int    `json:"memory"`
 	SwapMB      int    `json:"swap"`
 	DiskMB      int    `json:"disk"`
 	Io          int    `json:"io"`
